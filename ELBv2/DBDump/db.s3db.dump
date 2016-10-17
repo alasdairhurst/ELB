@@ -1,3 +1,41 @@
 PRAGMA foreign_keys=OFF;
 BEGIN TRANSACTION;
+CREATE TABLE [cell] (
+
+[_id] INTEGER DEFAULT '1' NOT NULL PRIMARY KEY,
+
+[terrain] INTEGER  NOT NULL,
+
+[height] FLOAT DEFAULT '0' NOT NULL,
+
+[size] INTEGER DEFAULT '1' NOT NULL,
+
+[function] INTEGER  NULL,
+
+[owner] INTEGER  NULL,
+
+[name] TEXT  NULL,
+
+[commanders] TEXT  NULL,
+
+[prisoners] TEXT  NULL,
+
+[defenders] TEXT  NULL
+
+);
+INSERT INTO "cell" VALUES(1,0,0.0,0,0,0,'test',NULL,NULL,NULL);
+INSERT INTO "cell" VALUES(2,14,52.0,125,125,1,'not good',NULL,NULL,NULL);
+INSERT INTO "cell" VALUES(3,3,5.0,23,3,1,'three',NULL,NULL,NULL);
+INSERT INTO "cell" VALUES(4,235,235.0,235,235,NULL,'t4est',NULL,NULL,NULL);
+INSERT INTO "cell" VALUES(5,223,23.0,2356235,3,2,'eryerye',NULL,NULL,NULL);
+CREATE TABLE "board" (
+	`_id`	INTEGER NOT NULL DEFAULT '-1',
+	`board_size`	INTEGER NOT NULL DEFAULT '1',
+	`cell_size`	FLOAT NOT NULL DEFAULT '1',
+	`cells`	TEXT,
+	`name`	TEXT,
+	`scale`	FLOAT DEFAULT '1',
+	PRIMARY KEY(`_id`)
+);
+INSERT INTO "board" VALUES(2352,1,1.0,'1,3,5,2','SomethingOrOther',1.2);
 COMMIT;
