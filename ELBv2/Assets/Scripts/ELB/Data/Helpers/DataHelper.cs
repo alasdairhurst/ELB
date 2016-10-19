@@ -1,5 +1,4 @@
-﻿using ELB.Data.Schemas;
-using System;
+﻿using System;
 using UnityEngine;
 
 namespace ELB.Data.Helpers {
@@ -47,7 +46,7 @@ namespace ELB.Data.Helpers {
 		}
 
 		// Converts a model array into a CSV string for database use
-		public static string ToDBString(Models.Model<Schema>[] array) {
+		public static string ToDBString(Models.Model[] array) {
 			string output = "";
 			for (int i = 0; i < array.Length; ++i) {
 				if (i != 0) {

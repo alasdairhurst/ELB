@@ -3,11 +3,21 @@ using ELB.Data.Helpers;
 using UnityEngine;
 using ELB.Utils;
 using System.Linq;
+using SQLite4Unity3d;
 
 namespace ELB.Data.Collections {
-	public class Collection<Model> : List<Model>, iFancyString where Model : Models.ModelBase, new() {
+	public class Collection<Model> : List<Model>, iFancyString where Model : Models.Model, new() {
 
-		private int[] ids;
+		// Static Variables
+
+		// SHOULD BE IN CONFIG
+		private static string dbRelPath = "/StreamingAssets/db.s3db";
+#if UNITY_EDITOR
+		private static string dbPath = @"Assets/" + dbRelPath;
+#else
+		private static string dbPath = Application.dataPath + dbRelPath;
+#endif
+		protected static SQLiteConnection _conn = new SQLiteConnection(dbPath, SQLiteOpenFlags.ReadOnly);
 
 		public Collection(string dbString) {
 			Debug.LogWarning("TODO: Cache collection statically and load on fetch or new.");
@@ -15,17 +25,18 @@ namespace ELB.Data.Collections {
 		}
 
 		private bool initialise(string dbString) {
-			ids = DataHelper.ToIntArray(dbString);
-			bool success = true;
-			for(int i = 0; i < ids.Length; ++i) {
-				Model m = new Model();
-				Debug.LogWarning("TODO: Fetch all IDs at once instead");
-				if(!m.Fetch(ids[i])) {
-					success = false;
-				}
-				Add(m);
+			return initialise(DataHelper.ToIntArray(dbString));
+		}
+
+		private bool initialise(int[] ids) {
+			List<int> _ids = ids.ToList();
+			var m = _conn.Table<Model>().Where(x => _ids.Contains(x._Id));
+			if (m == null || m.Count() == 0) {
+				Clear();
+				return false;
 			}
-			return success;
+			AddRange(m.ToList());
+			return true;
 		}
 
 		public bool Fetch() {
@@ -34,6 +45,13 @@ namespace ELB.Data.Collections {
 
 		public bool Fetch(string dbString) {
 			return initialise(dbString);
+		}
+
+		public bool Fetch(int[] ids) {
+
+			// fetch then
+
+			return initialise(ids);
 		}
 
 		public bool FetchAll() {

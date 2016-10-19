@@ -807,6 +807,18 @@ namespace SQLite4Unity3d
 		}
 
 		/// <summary>
+		/// Returns a queryable interface to the table represented by the given type.
+		/// </summary>
+		/// <returns>
+		/// A queryable object that is able to translate Where, OrderBy, and Take
+		/// queries into native SQL.
+		/// </returns>
+		public TableQuery<T> Table<T>(T type) where T : new() {
+			return new TableQuery<T>(this, type.GetType());
+		}
+
+
+		/// <summary>
 		/// Attempts to retrieve an object with the given primary key from the table
 		/// associated with the specified type. Use of this method requires that
 		/// the given type have a designated PrimaryKey (using the PrimaryKeyAttribute).
@@ -2459,6 +2471,11 @@ namespace SQLite4Unity3d
 		{
 			Connection = conn;
 			Table = table;
+		}
+
+		public TableQuery(SQLiteConnection conn, Type type) {
+			Connection = conn;
+			Table = Connection.GetMapping(type);
 		}
 
 		public TableQuery (SQLiteConnection conn)

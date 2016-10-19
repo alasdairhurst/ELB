@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace ELB.Data.Models {
 
-	public abstract class ModelBase : iFancyString {
+	public abstract class Model : iFancyString {
 
 		// Static Variables
 
@@ -22,62 +22,33 @@ namespace ELB.Data.Models {
 
 		// Constructors
 
-		public ModelBase() {
+		public Model() { }
+
+		public Model(Model model) {
 			Debug.LogWarning("TODO: Load static DB strings from config instead");
-			Initialise();
+			Init(model);
 		}
 
 		// Initialisers
 
-		protected virtual void Initialise() {
-			_Id = -1;
-		}
-
-		// Props
-		public int _Id { get; set; }
-
-		// Methods
-
-		public bool Fetch() {
-			return Fetch(_Id);
-		}
-
-		public abstract bool Fetch(int id);
-
-		public abstract bool Save();
-
-		public abstract string ToString(StringOpts opts, int tabIndex = 0);
-	}
-
-
-	public abstract class Model<Schema> : ModelBase where Schema : Schemas.Schema, new() {
-
-		// Constructors
-
-		public Model() : base() {}
-
-		public Model(Schema schema) {
-			Initialise(schema);
-		}
-		public Model(Model<Schema> model) {
-			Initialise(model);
-		}
-
-		// Initialisers
-
-		protected virtual void Initialise(Schema schema) {
-			_Id = schema._id;
-		}
-
-		protected void Initialise(Model<Schema> model) {
+		protected void Init<T>(T model) where T : Model {
 			PropertyInfo[] properties = model.GetType().GetProperties();
-			
-			foreach (PropertyInfo pi in properties) {
+
+			foreach(PropertyInfo pi in properties) {
 				if (pi.CanWrite) {
 					pi.SetValue(this, pi.GetValue(model, null), null);
 				}
 			}
+			Initialise(model);
 		}
+
+		protected virtual void Initialise<T>(T model) where T : Model {
+			_Id = -1;
+		}
+
+		// Props
+		[PrimaryKey, AutoIncrement]
+		public int _Id { get; set; }
 
 		// Methods
 
@@ -87,7 +58,7 @@ namespace ELB.Data.Models {
 
 		delegate string FormatDelegate(StringOpts opts);
 
-		public override string ToString(StringOpts opts, int tabIndex = 0) {
+		public string ToString(StringOpts opts, int tabIndex = 0) {
 			if (tabIndex > 10) {
 				return "";
 			}
@@ -162,21 +133,25 @@ namespace ELB.Data.Models {
 			}
 		}
 
-		public override bool Fetch(int id) {
+		public bool Fetch<T>(int id) where T : Model, new() {
 			if (id == -1) {
 				return false;
 			}
-			var sQuery = _conn.Table<Schema>().Where(x => x._id == id);
-			var s = sQuery.FirstOrDefault();
+			var s = _conn.Find<T>(id);
 			if (s == null) {
 				return false;
 			}
-			Initialise(s);
+			Init(s);
 			return true;
 		}
 
-		public override bool Save() {
-			return false;
+
+		public abstract bool Fetch(int id);
+
+		public bool Fetch() {
+			return Fetch(_Id);
 		}
+
+		public abstract bool Save();
 	}
 }
