@@ -15,6 +15,7 @@ public class Player : ScriptableObject
 	public PointsSystem Currency = new PointsSystem();
 	public CardList Hand;
 	public Army PlayerArmy;
+
 	public bool HasMoved;
 	public bool IsScouting;
 	public bool LandedInn;

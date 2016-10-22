@@ -4,6 +4,8 @@ using System.Reflection;
 using UnityEngine;
 using ELB.Utils;
 using System.Linq;
+using ELB.Data.Helpers;
+using System;
 
 namespace ELB.Data.Models {
 
@@ -11,20 +13,15 @@ namespace ELB.Data.Models {
 
 		// Static Variables
 
-		// SHOULD BE IN CONFIG
-		private static string dbRelPath = "/StreamingAssets/db.s3db";
-#if UNITY_EDITOR
-		private static string dbPath = @"Assets/" + dbRelPath;
-#else
-		private static string dbPath = Application.dataPath + dbRelPath;
-#endif
-		protected static SQLiteConnection _conn = new SQLiteConnection(dbPath, SQLiteOpenFlags.ReadOnly);
+		protected static SQLiteConnection _conn = new SQLiteConnection(Conf.dbPath, SQLiteOpenFlags.ReadOnly);
 
 		// Constructors
 
-		public Model() { }
+		public Model() {
+			_Id = System.Guid.NewGuid().ToString("B").ToUpper();
+		}
 
-		public Model(Model model) {
+		public Model(Model model) : base() {
 			Debug.LogWarning("TODO: Load static DB strings from config instead");
 			Init(model);
 		}
@@ -34,7 +31,7 @@ namespace ELB.Data.Models {
 		protected void Init<T>(T model) where T : Model {
 			PropertyInfo[] properties = model.GetType().GetProperties();
 
-			foreach(PropertyInfo pi in properties) {
+			foreach (PropertyInfo pi in properties) {
 				if (pi.CanWrite) {
 					pi.SetValue(this, pi.GetValue(model, null), null);
 				}
@@ -42,18 +39,20 @@ namespace ELB.Data.Models {
 			Initialise(model);
 		}
 
-		protected virtual void Initialise<T>(T model) where T : Model {
-			_Id = -1;
-		}
+		protected virtual void Initialise<T>(T model) where T : Model { }
 
 		// Props
-		[PrimaryKey, AutoIncrement]
-		public int _Id { get; set; }
+		[PrimaryKey]
+		public string _Id { get; set; }
 
 		// Methods
 
 		public override string ToString() {
 			return ToString(StringOpts.TwoLine);
+		}
+
+		protected virtual string[] PropsToIgnore() {
+			return null;
 		}
 
 		delegate string FormatDelegate(StringOpts opts);
@@ -65,12 +64,16 @@ namespace ELB.Data.Models {
 			//string pretty = string.Format("{0}\n", data);
 			string currentTabLevel = new string('\t', tabIndex);
 			string nextTabLevel = new string('\t', tabIndex + 1);
-
-			PropertyInfo[] properties = GetType().GetProperties();
-			List<PropertyInfo> pList = new List<PropertyInfo>(properties);
-			pList.Sort((x, y) => {
-				return string.Compare(x.Name, y.Name);
-			});
+			string[] propsToIgnore = PropsToIgnore();
+			var pList = GetType().GetProperties().Where(x => {
+				if (propsToIgnore == null) {
+					return true;
+				}
+				return !propsToIgnore.Contains(x.Name);
+			}).OrderBy(x => x.Name);
+			//.Sort((x, y) => {
+			//	return string.Compare(x.Name, y.Name);
+			//});
 
 			FormatDelegate f = delegate (StringOpts o) {
 				string start = "";
@@ -91,15 +94,12 @@ namespace ELB.Data.Models {
 					var value = x.GetValue(this, null);
 					if (x.PropertyType.Name == "String") {
 						value = string.Format("\"{0}\"", x.GetValue(this, null));
-					}
-					else if(value == null) {
+					} else if (value == null) {
 						value = "null";
-					}
-					else if (typeof(iFancyString).IsAssignableFrom(value.GetType())) {
+					} else if (typeof(iFancyString).IsAssignableFrom(value.GetType())) {
 						StringOpts opt = o == StringOpts.Pretty ? StringOpts.Pretty : StringOpts.OneLine;
 						value = ((iFancyString)value).ToString(opt, tabIndex + 1);
-					}
-					else {
+					} else {
 						value = value.ToString();
 					}
 					return string.Format("{0}: {1}", x.Name, value);
@@ -133,10 +133,8 @@ namespace ELB.Data.Models {
 			}
 		}
 
-		public bool Fetch<T>(int id) where T : Model, new() {
-			if (id == -1) {
-				return false;
-			}
+		public bool Fetch<T>(string id) where T : Model, new() {
+
 			var s = _conn.Find<T>(id);
 			if (s == null) {
 				return false;
@@ -146,7 +144,7 @@ namespace ELB.Data.Models {
 		}
 
 
-		public abstract bool Fetch(int id);
+		public abstract bool Fetch(string id);
 
 		public bool Fetch() {
 			return Fetch(_Id);

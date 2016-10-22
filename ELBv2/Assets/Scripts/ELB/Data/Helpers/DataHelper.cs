@@ -10,17 +10,6 @@ namespace ELB.Data.Helpers {
 			return items;
 		}
 
-		// Converts a CSV string stored in SQL into an array of parsed integers
-		public static int[] ToIntArray(string array) {
-			Debug.LogWarning("TODO: Needs to handle error cases where parsing goes wrong - return []");
-			string[] items = array.Split(ARRAY_SEPARATOR);
-			int[] intItems = new int[items.Length];
-			for (int i = 0; i < items.Length; ++i) {
-				intItems[i] = Convert.ToInt16(items[i]);
-			}
-			return intItems;
-		}
-
 		// Converts an int array into CSV string for database use
 		public static string ToDBString(int[] array) {
 			string output = "";

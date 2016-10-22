@@ -16,7 +16,7 @@ namespace ELB.Data.Models {
 		public string[] Prisoners { get; set; }
 		public string[] Defenders { get; set; }
 
-		public override bool Fetch(int id) {
+		public override bool Fetch(string id) {
 			return Fetch<Cell>(id);
 		}
 

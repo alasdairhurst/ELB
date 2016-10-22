@@ -16,12 +16,16 @@ namespace ELB.Data.Models {
 			}
 		}
 
-		public override bool Fetch(int id) {
+		public override bool Fetch(string id) {
 			return Fetch<Board>(id);
 		}
 
 		public override bool Save() {
 			throw new NotImplementedException();
+		}
+
+		protected override string[] PropsToIgnore() {
+			return new string[] { "CellIds" };
 		}
 
 		public int CellSize { get; set; }
