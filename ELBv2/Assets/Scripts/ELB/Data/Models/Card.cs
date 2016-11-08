@@ -11,6 +11,9 @@ namespace ELB.Data.Models {
 		public override bool Fetch(string id) {
 			return Fetch<Card>(id);
 		}
+		public override bool LoadTemp(string id) {
+			return LoadTemp<Card>(id);
+		}
 
 		public override bool Save() {
 			throw new NotImplementedException();

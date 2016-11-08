@@ -2,7 +2,7 @@
 using System;
 
 namespace ELB.Data.Models {
-	class Player : Model {
+	public class Player : Model {
 		public Player() : base() { }
 
 		public int TeamId { get; set; }
@@ -17,6 +17,9 @@ namespace ELB.Data.Models {
 
 		public override bool Fetch(string id) {
 			return Fetch<Player>(id);
+		}
+		public override bool LoadTemp(string id) {
+			return LoadTemp<Player>(id);
 		}
 
 		public override bool Save() {

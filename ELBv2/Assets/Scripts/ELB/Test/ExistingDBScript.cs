@@ -2,20 +2,32 @@
 using ELB.Data.Models;
 using ELB.Utils;
 using ELB.Data.Collections;
+using UnityEngine.SceneManagement;
+using ELB.Data.Helpers;
 
 public class ExistingDBScript : MonoBehaviour {
 	// Use this for initialization
-	void Start () {
-		var c = new Cell();
-		Debug.Log(c);
-		Debug.Log(c.ToString(StringOpts.Pretty));
-		Board board = new Board();
-		board.Fetch("{9A69826B-5BC5-4F89-9066-6D52D598979B}");
-		Debug.Log(board.ToString(StringOpts.Pretty));
-		Debug.Log(board.ToString(StringOpts.Full));
-		Debug.Log(board.ToString(StringOpts.Short));
-		Debug.Log(board.ToString(StringOpts.OneLine));
-		Debug.Log(board.ToString(StringOpts.TwoLine));
 
+	public string otherScene;
+	void Start () {
+		Board board = new Board();
+		board.LoadTemp("{9A69826B-5BC5-4F89-9066-6D52D598979B}");
+		Debug.Log(board.Name);
+
+		SaveManager.CreateSave();
+		string[] saves = SaveManager.GetSaves();
+		foreach (string save in saves) {
+			Debug.Log(save);
+		}
+
+		if (board.Name != "boobies") {
+			board.Fetch("{9A69826B-5BC5-4F89-9066-6D52D598979B}");
+			Debug.Log(board.Name);
+			board.Name = "boobies";
+			Debug.Log("Saving");
+			board.SaveTemp();
+
+			SceneManager.LoadScene(otherScene);
+		}
 	}
 }

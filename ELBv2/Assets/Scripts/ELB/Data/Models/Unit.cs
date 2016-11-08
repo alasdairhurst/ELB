@@ -2,7 +2,7 @@
 using System;
 
 namespace ELB.Data.Models {
-	class Unit : Actor {
+	public class Unit : Actor {
 		public Unit() : base() { }
 
 		protected override void Initialise<T>(T model) {

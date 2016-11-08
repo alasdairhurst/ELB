@@ -2,18 +2,17 @@
 using System;
 
 namespace ELB.Data.Models {
-	public class Actor : Model {
-		public Actor() : base() { }
+	public class Landscape : Model {
+		public Landscape() : base() { }
 
-		protected override void Initialise<T>(T model) {
-		}
+		public string Name { get; set; }
+		public string Prefab { get; set; }
 
 		public override bool Fetch(string id) {
-			return Fetch<Actor>(id);
+			return Fetch<Landscape>(id);
 		}
-
 		public override bool LoadTemp(string id) {
-			return LoadTemp<Actor>(id);
+			return LoadTemp<Landscape>(id);
 		}
 
 		public override bool Save() {

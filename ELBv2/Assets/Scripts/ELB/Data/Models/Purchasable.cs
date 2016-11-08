@@ -1,11 +1,15 @@
 ﻿using System;
 
 namespace ELB.Data.Models {
-	class Purchasable : Model {
+	public class Purchasable : Model {
 		public Purchasable() : base() { }
 
 		public override bool Fetch(string id) {
 			return Fetch<Purchasable>(id);
+		}
+
+		public override bool LoadTemp(string id) {
+			return LoadTemp<Purchasable>(id);
 		}
 
 		public override bool Save() {

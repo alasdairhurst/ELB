@@ -9,38 +9,40 @@ using System;
 namespace ELB.Data.Collections {
 	public class Collection<Model> : List<Model>, iFancyString where Model : Models.Model, new() {
 
-		// Static Variables
+		// Statics
+		protected static SQLiteConnection connection() {
+			return Models.Model._conn;
+		}
 
-		protected static SQLiteConnection _conn = new SQLiteConnection(Conf.dbPath, SQLiteOpenFlags.ReadOnly);
+		protected static Cache<string, Models.Model> dbCache() {
+			return Models.Model._dbCache;
+		}
+		protected static Cache<string, Models.Model> gameCache() {
+			return Models.Model._dbCache;
+		}
 
-		protected static Cache<string, Model> _cache = new Cache<string, Model>();
 
 		public Collection() {
 		}
 
 		public Collection(string dbString) {
-			initialise(dbString);
+			Fetch(dbString);
 		}
 
-		private bool initialise(string dbString) {
-			return initialise(
-				dbString.Split('\n')
-			);
-		}
-
-		private bool initialise(string[] ids) {
+		public bool Fetch(string[] ids) {
 			if (ids.Length == 0) {
+				Clear();
 				return true;
 			}
 			List<string> _ids = ids.ToList();
-			List<Model> models = _cache.get(_ids);
+			List<Model> models = dbCache().get<Model>(_ids);
 			// did we hit all of them?
 			if (_ids.Count != models.Count) {
 				var diff = _ids.Except(models.Select(x => x._Id));
 				if(diff.Count() > 0) {
-					var m = _conn.Table<Model>().Where(x => diff.Contains(x._Id));
+					var m = connection().Table<Model>().Where(x => diff.Contains(x._Id));
 					foreach(Model mo in m) {
-						_cache.set(mo._Id, mo);
+						dbCache().set(mo._Id, mo);
 					}
 					models.AddRange(m);
 				}
@@ -49,41 +51,77 @@ namespace ELB.Data.Collections {
 				return false;
 			}
 			Clear();
-			AddRange(models.ToList());
+			AddRange(models);
 			return true;
 		}
 
+		// Fetch all models with the ID currently loaded from the cache or database
 		public bool Fetch() {
-			return initialise(this.Select(x => x._Id).ToArray());
+			return Fetch(this.Select(x => x._Id).ToArray());
 		}
 
 
 		public bool Fetch(string dbString) {
-			return initialise(dbString);
+			return Fetch(
+				dbString.Split('\n')
+			);
 		}
 
-		public bool Fetch(string[] ids) {
-			return initialise(ids);
-		}
-
+		// Fetch all models of this type from the cache or database
 		public bool FetchAll() {
 			// until unity gets c# 6 support we will be using sqlite4unity3d.
 			// afterwards we can switch to a better library such as sqlite-net
 
-			//var cache = _cache.get();
-			//var cacheId = cache.Select(x => x._Id);
-			//var m = _conn.Table<Model>().Where(x => !cacheId.Contains(x._Id));
-			//foreach (Model mo in m) {
-			//	_cache.set(mo._Id, mo);
-			//}
-			Clear();
-			_cache.clear();
-			var m = _conn.Table<Model>();
-			foreach (Model mo in m) {
-				_cache.set(mo._Id, mo);
+			// var cache = _cache.get();
+			// var cacheId = cache.Select(x => x._Id);
+			// var m = _conn.Table<Model>().Where(x => !cacheId.Contains(x._Id));
+			// foreach (Model mo in m) {
+			// 	_cache.set(mo._Id, mo);
+			// }
+
+			var m = dbCache().get<Model>();
+			if (m.Count == 0) {
+				var fetched = connection().Table<Model>();
+				if (fetched.Count() != 0) {
+					dbCache().clear();
+					foreach (Model mo in fetched) {
+						dbCache().set(mo._Id, mo);
+					}
+					m.AddRange(fetched);
+				}
 			}
+			Clear();
 			AddRange(m);
 			return true;
+		}
+
+		public void SaveTemp() {
+			foreach (Model m in this) {
+				gameCache().set(m._Id, m);
+			}
+		}
+
+		public bool LoadAllTemp() {
+			var temp = gameCache().get<Model>();
+			Clear();
+			AddRange(temp);
+			return true;
+		}
+
+		public bool LoadTemp(string[] ids) {
+			if (ids.Length == 0) {
+				Clear();
+				return true;
+			}
+			List<string> _ids = ids.ToList();
+			List<Model> models = gameCache().get<Model>(_ids);
+			Clear();
+			AddRange(models);
+			return true;
+		}
+
+		public bool LoadTemp() {
+			return LoadTemp(this.Select(x => x._Id).ToArray());
 		}
 
 		public bool Save() {

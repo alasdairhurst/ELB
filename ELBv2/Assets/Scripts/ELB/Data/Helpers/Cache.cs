@@ -23,49 +23,52 @@ namespace ELB.Data.Helpers {
 		}
 
 		public void set(K key, V value) {
-			storedTime.Add(key, currentTime);
-			storedData.Add(key, value);
+			storedTime[key] = currentTime;
+			storedData[key] = value;
 		}
 
-		public List<V> get(List<K> keys) {
-			List<V> vals = new List<V>();
+		public List<T> get<T>(List<K> keys) where T : V {
+			List<T> vals = new List<T>();
 			foreach (K key in keys) {
-				V val = get(key);
-				if (!EqualityComparer<V>.Default.Equals(val, default(V))) {
+				T val = get<T>(key);
+				if (!EqualityComparer<T>.Default.Equals(val, default(T))) {
 					vals.Add(val);
 				}
 			}
 			return vals;
 		}
 
-		public List<V> get() {
-			List<V> vals = new List<V>();
+		public List<T> get<T>() where T : V {
+			List<T> vals = new List<T>();
 			foreach (K key in storedData.Keys) {
-				V val = get(key);
-				if (!EqualityComparer<V>.Default.Equals(val, default(V))) {
+				T val = get<T>(key);
+				if (!EqualityComparer<T>.Default.Equals(val, default(T))) {
 					vals.Add(val);
 				}
 			}
 			return vals;
 		}
 
-		public V get(K key) {
+		public T get<T>(K key) where T : V {
 			if (!storedData.ContainsKey(key)) {
-				return default(V);
+				return default(T);
 			} else {
 				V value;
 				storedData.TryGetValue(key, out value);
 				if (double.IsInfinity(timeToLive)) {
-					return value;
+					return (T)(object)value;
 				} else {
 					long savedTime;
 					storedTime.TryGetValue(key, out savedTime);
 					if (savedTime + timeToLive <= currentTime) {
-						return value;
+						if (value is T) {
+							return (T)(object)value;
+						}
+						return default(T);
 					} else {
 						storedTime.Remove(key);
 						storedData.Remove(key);
-						return default(V);
+						return default(T);
 					}
 				}
 			}
