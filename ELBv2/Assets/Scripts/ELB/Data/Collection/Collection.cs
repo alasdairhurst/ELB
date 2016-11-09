@@ -39,7 +39,7 @@ namespace ELB.Data.Collections {
 			// did we hit all of them?
 			if (_ids.Count != models.Count) {
 				var diff = _ids.Except(models.Select(x => x._Id));
-				if(diff.Count() > 0) {
+				if (diff.Count() > 0) {
 					var m = connection().Table<Model>().Where(x => diff.Contains(x._Id));
 					foreach(Model mo in m) {
 						dbCache().set(mo._Id, mo);

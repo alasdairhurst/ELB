@@ -1,14 +1,13 @@
 ﻿using SQLite4Unity3d;
-using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 using ELB.Utils;
 using System.Linq;
 using ELB.Data.Helpers;
 using System;
+using ELB.Data.Collections;
 
 namespace ELB.Data.Models {
-
 	public abstract class Model : iFancyString {
 
 		// Static Variables
@@ -27,7 +26,6 @@ namespace ELB.Data.Models {
 		}
 
 		public Model(Model model) : base() {
-			Debug.LogWarning("TODO: Load static DB strings from config instead");
 			Init(model);
 		}
 
@@ -37,9 +35,33 @@ namespace ELB.Data.Models {
 			PropertyInfo[] properties = model.GetType().GetProperties();
 
 			foreach (PropertyInfo pi in properties) {
-				if (pi.CanWrite) {
-					pi.SetValue(this, pi.GetValue(model, null), null);
+				if (!pi.CanWrite) {
+					continue;
 				}
+				// get the value of the current property in the passed model
+				var value = pi.GetValue(model, null);
+				// set the value in the current model
+				pi.SetValue(this, value, null);
+				// if property is an id string
+				if (!pi.Name.EndsWith("_ids")) {
+					continue;
+				}
+				var collectionPropName = pi.Name.Substring(0, pi.Name.LastIndexOf("_ids"));
+				// try to find the collection property that is mapped to the current id prop
+				var collectionProp = properties.Where(x => x.Name == collectionPropName).FirstOrDefault();
+				if (collectionProp == null) {
+					continue;
+				}
+				// now some ugly crap for creating a generic since i have no idea what models the collection has
+				var d1 = typeof(Collection<>);
+				Type[] typeArgs = collectionProp.PropertyType.GetGenericArguments();
+				var makeme = d1.MakeGenericType(typeArgs);
+				// create an instance of the collection passing the ids as a string as a prop
+				object o = Activator.CreateInstance(makeme, (string)value);
+				// fix please - required to stop o going out of scope and being cleaned up *blargh*
+				collectionProp.SetValue(model, o, null);
+				// set the collection on the current model
+				collectionProp.SetValue(this, o, null);
 			}
 			Initialise(model);
 		}
@@ -56,10 +78,6 @@ namespace ELB.Data.Models {
 			return ToString(StringOpts.TwoLine);
 		}
 
-		protected virtual string[] PropsToIgnore() {
-			return null;
-		}
-
 		delegate string FormatDelegate(StringOpts opts);
 
 		public string ToString(StringOpts opts, int tabIndex = 0) {
@@ -69,16 +87,10 @@ namespace ELB.Data.Models {
 			//string pretty = string.Format("{0}\n", data);
 			string currentTabLevel = new string('\t', tabIndex);
 			string nextTabLevel = new string('\t', tabIndex + 1);
-			string[] propsToIgnore = PropsToIgnore();
 			var pList = GetType().GetProperties().Where(x => {
-				if (propsToIgnore == null) {
-					return true;
-				}
-				return !propsToIgnore.Contains(x.Name);
+				// ignore ids
+				return !x.Name.EndsWith("_ids");
 			}).OrderBy(x => x.Name);
-			//.Sort((x, y) => {
-			//	return string.Compare(x.Name, y.Name);
-			//});
 
 			FormatDelegate f = delegate (StringOpts o) {
 				string start = "";
