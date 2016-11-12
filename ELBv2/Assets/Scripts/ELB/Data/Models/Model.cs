@@ -8,14 +8,19 @@ using System;
 using ELB.Data.Collections;
 
 namespace ELB.Data.Models {
+
+	public enum FetchAction {
+		None,
+		Fetch,
+		LoadTemp
+	}
+
 	public abstract class Model : iFancyString {
 
 		// Static Variables
 
-		public static SQLiteConnection _conn = new SQLiteConnection(Conf.dbPath, SQLiteOpenFlags.ReadOnly);
+		public static Database _db = new Database();
 
-		// cache of the data pulled from the main database
-		public static Cache<string, Model> _dbCache = new Cache<string, Model>();
 		// cache of the data stored by the current game
 		public static Cache<string, Model> _gameCache = new Cache<string, Model>();
 
@@ -152,14 +157,10 @@ namespace ELB.Data.Models {
 
 		// Fetch model contents from main database
 		public bool Fetch<T>(string id) where T : Model, new() {
-			var model = _dbCache.get<T>(id);
-			if (model == null) {
-				model = _conn.Find<T>(id);
-			}
+			var model = _db.GetOne<T>(id);
 			if (model == null) {
 				return false;
 			}
-			_dbCache.set(id, model);
 			Init(model);
 			return true;
 		}
@@ -174,14 +175,15 @@ namespace ELB.Data.Models {
 
 		// Save contents of model into temporary memory
 		public void SaveTemp() {
-			_gameCache.set(_Id, this);
+			// recursively save 
+			_gameCache.SetOne(_Id, this);
 		}
 
 		public abstract bool LoadTemp(string id);
 
 		// Load contents of model from temporary memory
 		public bool LoadTemp<T>(string id) where T : Model, new() {
-			var model = _gameCache.get<T>(id);
+			var model = _gameCache.GetOne<T>(id);
 			if (model == null) {
 				return false;
 			}

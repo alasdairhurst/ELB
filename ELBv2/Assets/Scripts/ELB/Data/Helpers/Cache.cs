@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using ELB.Data.Collections;
+using ELB.Data.Models;
 
 namespace ELB.Data.Helpers {
 	public class Cache<K, V> {
@@ -18,38 +20,16 @@ namespace ELB.Data.Helpers {
 		}
 
 		// set ttl in ms
-		public void setTimeToLive(double ttl) {
+		public void SetTTL(double ttl) {
 			timeToLive = ttl;
 		}
 
-		public void set(K key, V value) {
+		public void SetOne(K key, V value) {
 			storedTime[key] = currentTime;
 			storedData[key] = value;
 		}
 
-		public List<T> get<T>(List<K> keys) where T : V {
-			List<T> vals = new List<T>();
-			foreach (K key in keys) {
-				T val = get<T>(key);
-				if (!EqualityComparer<T>.Default.Equals(val, default(T))) {
-					vals.Add(val);
-				}
-			}
-			return vals;
-		}
-
-		public List<T> get<T>() where T : V {
-			List<T> vals = new List<T>();
-			foreach (K key in storedData.Keys) {
-				T val = get<T>(key);
-				if (!EqualityComparer<T>.Default.Equals(val, default(T))) {
-					vals.Add(val);
-				}
-			}
-			return vals;
-		}
-
-		public T get<T>(K key) where T : V {
+		public T GetOne<T>(K key) where T : V {
 			if (!storedData.ContainsKey(key)) {
 				return default(T);
 			} else {
@@ -74,7 +54,29 @@ namespace ELB.Data.Helpers {
 			}
 		}
 
-		public void clear() {
+		public IEnumerable<T> Get<T>(IEnumerable<K> keys) where T : V {
+			var vals = new List<T>();
+			foreach (K key in keys) {
+				T val = GetOne<T>(key);
+				if (!EqualityComparer<T>.Default.Equals(val, default(T))) {
+					vals.Add(val);
+				}
+			}
+			return vals;
+		}
+
+		public IEnumerable<T> GetAll<T>() where T : V {
+			var vals = new List<T>();
+			foreach (K key in storedData.Keys) {
+				T val = GetOne<T>(key);
+				if (!EqualityComparer<T>.Default.Equals(val, default(T))) {
+					vals.Add(val);
+				}
+			}
+			return vals;
+		}
+
+		public void Clear() {
 			storedData.Clear();
 			storedTime.Clear();
 		}
