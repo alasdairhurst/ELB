@@ -10,9 +10,6 @@ namespace ELB.Data.Collections {
 	public class Collection<Model> : List<Model>, iFancyString where Model : Models.Model, new() {
 
 		// Statics
-		protected static Database db() {
-			return Models.Model._db;
-		}
 
 		protected static Cache<string, Models.Model> gameCache() {
 			return Models.Model._gameCache;
@@ -27,7 +24,7 @@ namespace ELB.Data.Collections {
 		}
 
 		public bool Fetch(IEnumerable<string> ids) {
-			List<Model> models = db().Get<Model>(ids);
+			List<Model> models = GameState.Fetch<Model>(ids);
 			if (models.Count != ids.Count()) {
 				return false;
 			}
@@ -51,7 +48,7 @@ namespace ELB.Data.Collections {
 		// Fetch all models of this type from the cache or database
 		public bool FetchAll() {
 			Clear();
-			AddRange(db().GetAll<Model>());
+			AddRange(GameState.FetchAll<Model>());
 			return true;
 		}
 

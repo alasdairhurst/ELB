@@ -17,10 +17,6 @@ namespace ELB.Data.Models {
 
 	public abstract class Model : iFancyString {
 
-		// Static Variables
-
-		public static Database _db = new Database();
-
 		// cache of the data stored by the current game
 		public static Cache<string, Model> _gameCache = new Cache<string, Model>();
 
@@ -157,7 +153,7 @@ namespace ELB.Data.Models {
 
 		// Fetch model contents from main database
 		public bool Fetch<T>(string id) where T : Model, new() {
-			var model = _db.GetOne<T>(id);
+			var model = GameState.FetchOne<T>(id);
 			if (model == null) {
 				return false;
 			}
