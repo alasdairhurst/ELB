@@ -15,6 +15,18 @@ namespace ELB.Data.Models {
 		LoadTemp
 	}
 
+	public abstract class Model<T> : Model where T : Model, new() {
+
+		public Model() : base() { }
+
+		public override bool Fetch(string id) {
+			return Fetch<T>(id);
+		}
+		public override void SaveState() {
+			SaveState<T>();
+		}
+	}
+
 	public abstract class Model : iFancyString {
 
 		// cache of the data stored by the current game
@@ -151,7 +163,7 @@ namespace ELB.Data.Models {
 			}
 		}
 
-		// Fetch model contents from main database
+		// Fetch model contents from state
 		public bool Fetch<T>(string id) where T : Model, new() {
 			var model = GameState.FetchOne<T>(id);
 			if (model == null) {
@@ -161,37 +173,61 @@ namespace ELB.Data.Models {
 			return true;
 		}
 
-		// Fetch model contents from main database
+		// Fetch model contents from state
 		public abstract bool Fetch(string id);
 
-		// Fetch model contents from main database
+		// Fetch model contents from state
 		public bool Fetch() {
 			return Fetch(_Id);
 		}
 
-		// Save contents of model into temporary memory
-		public void SaveTemp() {
-			// recursively save 
-			_gameCache.SetOne(_Id, this);
+		// Save contents of model into state
+		public abstract void SaveState();
+
+		// Save contents of model into state
+		public void SaveState<T>() where T : Model, new(){
+			GameState.Update((T)this);
 		}
 
-		public abstract bool LoadTemp(string id);
+		public T GetCompressedModel<T>() where T : Model, new() {
+			T model = new T();
+			PropertyInfo[] properties = this.GetType().GetProperties();
 
-		// Load contents of model from temporary memory
-		public bool LoadTemp<T>(string id) where T : Model, new() {
-			var model = _gameCache.GetOne<T>(id);
-			if (model == null) {
-				return false;
+			foreach (PropertyInfo pi in properties) {
+				if (!pi.CanWrite) {
+					continue;
+				}
+
+				// check if prop has an associated _ids string
+				var idsProp = properties.Where(x => x.Name == pi.Name + "_ids").FirstOrDefault();
+				if (idsProp != null) {
+					// has _ids string associated. we don't want to write it
+					continue;
+				}
+				object value;
+				// if property is an id string
+				if (pi.Name.EndsWith("_ids")) {
+					// extract the ids string out of the associated collection and write it
+					var collectionPropName = pi.Name.Substring(0, pi.Name.LastIndexOf("_ids"));
+					// try to find the collection property that is mapped to the current id prop
+					var collectionProp = properties.Where(x => x.Name == collectionPropName).FirstOrDefault();
+					if (collectionProp == null) {
+						continue;
+					}
+					// call the method on the collection to turn it to a string
+					var collection = collectionProp.GetValue(this, null);
+					value = collection.GetType().GetMethod("ToDBString")
+						.Invoke(collection, null);
+
+				} else {
+					// get the value of the current property
+					value = pi.GetValue(this, null);
+				}
+				// set the value in the model
+				pi.SetValue(model, value, null);
 			}
-			Init(model);
-			return true;
+			// return the model
+			return model;
 		}
-
-		public bool LoadTemp<T>() where T : Model, new() {
-			return LoadTemp<T>();
-		}
-
-		// Override to save select model contents to a save file
-		public abstract bool Save();
 	}
 }

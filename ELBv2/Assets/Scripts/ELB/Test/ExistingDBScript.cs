@@ -13,8 +13,6 @@ public class ExistingDBScript : MonoBehaviour {
 		Board board = new Board();
 		board.Fetch("{9A69826B-5BC5-4F89-9066-6D52D598979B}");
 		Debug.Log(board.ToString(StringOpts.Pretty));
-		board.LoadTemp("{9A69826B-5BC5-4F89-9066-6D52D598979B}");
-		Debug.Log(board.Name);
 
 		SaveManager.CreateSave();
 		string[] saves = SaveManager.GetSaves();
@@ -28,7 +26,7 @@ public class ExistingDBScript : MonoBehaviour {
 			Debug.Log(board.ToString(StringOpts.Pretty));
 			board.Name = "boobies";
 			Debug.Log("Saving");
-			board.SaveTemp();
+			board.SaveState();
 
 			SceneManager.LoadScene(otherScene);
 		}

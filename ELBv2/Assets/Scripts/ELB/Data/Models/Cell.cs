@@ -2,7 +2,7 @@
 using ELB.Data.Collections;
 
 namespace ELB.Data.Models {
-	public class Cell : Model {
+	public class Cell : Model<Cell> {
 		public int Size { get; set; }
 		public float Height { get; set; }
 		public string LandscapeId { get; set; }
@@ -16,17 +16,5 @@ namespace ELB.Data.Models {
 		public Collection<Unit> Prisoners { get; set; }
 		public string DefenderIds { get; set; }
 		public Collection<Unit> Defenders { get; set; }
-
-		public override bool Fetch(string id) {
-			return Fetch<Cell>(id);
-		}
-		public override bool LoadTemp(string id) {
-			return LoadTemp<Cell>(id);
-		}
-
-		public override bool Save() {
-			throw new NotImplementedException();
-		}
-
 	}
 }

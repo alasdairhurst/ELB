@@ -1,21 +1,7 @@
 ﻿using System;
 
 namespace ELB.Data.Models {
-	public class Purchasable : Model {
-		public Purchasable() : base() { }
-
-		public override bool Fetch(string id) {
-			return Fetch<Purchasable>(id);
-		}
-
-		public override bool LoadTemp(string id) {
-			return LoadTemp<Purchasable>(id);
-		}
-
-		public override bool Save() {
-			throw new NotImplementedException();
-		}
-
+	public class Purchasable : Model<Purchasable> {
 		public string Name { get; set; }
 		public int Cost { get; set; }
 		public int Level { get; set; }

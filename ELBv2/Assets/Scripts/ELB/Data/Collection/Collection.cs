@@ -9,18 +9,15 @@ using System;
 namespace ELB.Data.Collections {
 	public class Collection<Model> : List<Model>, iFancyString where Model : Models.Model, new() {
 
-		// Statics
-
-		protected static Cache<string, Models.Model> gameCache() {
-			return Models.Model._gameCache;
-		}
-
-
 		public Collection() {
 		}
 
 		public Collection(string dbString) {
 			Fetch(dbString);
+		}
+
+		public string ToDBString() {
+			return string.Join(", ", this.Select(x => { return x._Id; }).ToArray());
 		}
 
 		public bool Fetch(IEnumerable<string> ids) {
@@ -54,30 +51,8 @@ namespace ELB.Data.Collections {
 
 		public void SaveTemp() {
 			foreach (Model m in this) {
-				gameCache().SetOne(m._Id, m);
+				GameState.Update(m);
 			}
-		}
-
-		public bool LoadAllTemp() {
-			var temp = gameCache().GetAll<Model>();
-			Clear();
-			AddRange(temp);
-			return true;
-		}
-
-		public bool LoadTemp(IEnumerable<string> ids) {
-			if (ids.Count() == 0) {
-				Clear();
-				return true;
-			}
-			var models = gameCache().Get<Model>(ids);
-			Clear();
-			AddRange(models);
-			return true;
-		}
-
-		public bool LoadTemp() {
-			return LoadTemp(this.Select(x => x._Id).ToArray());
 		}
 
 		public bool Save() {

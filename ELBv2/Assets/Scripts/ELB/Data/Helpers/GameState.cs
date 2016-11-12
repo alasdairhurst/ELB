@@ -56,5 +56,10 @@ namespace ELB.Data.Helpers {
 			}
 			return models;
 		}
+
+		public static void Update<Model>(Model model) where Model : Models.Model, new() {
+			// should it be up to the model or consumer of the model to update the state?
+			state.SetOne(model._Id, model.GetCompressedModel<Model>());
+		}
 	}
 }
