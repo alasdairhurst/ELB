@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
-using ELB.Data.Models;
+using ELB.Data.Models.Generated;
 using System.Linq;
+using System;
 
 namespace ELB.Data.Helpers {
 	static class SaveManager {
 
-		private static string currentSave;
+		private static SaveInfo currentSave;
 		private static SQLiteConnection _conn;
 
 		private static string generateName() {
@@ -21,7 +22,7 @@ namespace ELB.Data.Helpers {
 			return new SaveInfo {
 				Filename = fi.Name,
 				Time = fi.CreationTimeUtc,
-				IsCurrent = currentSave == fi.Name
+				IsCurrent = currentSave == null ? false : currentSave.Filename == fi.Name
 			};
 		}
 
@@ -40,16 +41,8 @@ namespace ELB.Data.Helpers {
 			return latest;
 		}
 
-		public static bool SetCurrentSave(SaveInfo save) {
-			if (currentSave == save.Filename) {
-				return false;
-			}
-			if (_conn != null) {
-				_conn.Close();
-			}	
-			_conn = new SQLiteConnection(Conf.savePath + save.Filename, SQLiteOpenFlags.ReadWrite);
-			currentSave = save.Filename;
-			return true;
+		public static void SetCurrentSave(SaveInfo save) {
+			currentSave = save;
 		}
 
 		public static List<SaveInfo> GetSaves() {
@@ -77,52 +70,54 @@ namespace ELB.Data.Helpers {
 			}
 		}
 
-		public static void SaveData(Cache<string, object> data, SaveInfo save) {
+		public static void SaveData(List<Model> data, SaveInfo save) {
 			SetCurrentSave(save);
 			SaveData(data);
 		}
 
-		public static void SaveData(Cache<string, object> data) {
-			foreach(Models.Generated.Model v in data.Values) {
-				//_conn.CreateTable(v.GetType());
+		public static void SaveData(List<Model> data) {
+			_conn = new SQLiteConnection(Conf.savePath + currentSave.Filename, SQLiteOpenFlags.ReadWrite);
+			// remember types we already created tables for
+			var types = new List<Type>();
+			foreach(Model v in data) {
+				var type = v.GetType();
+				if (!types.Contains(type)) {
+					_conn.CreateTable(v.GetType());
+					types.Add(type);
+				}
 				_conn.InsertOrReplace(v);
 			}
+			_conn.Close();
+			_conn = null;
 		}
 
-		public static Cache<string, object> LoadData(SaveInfo save) {
+		public static List<Model> LoadData(SaveInfo save) {
 			SetCurrentSave(save);
 			return LoadData();
 		}
 
-		public static Cache<string, object> LoadData() {
-			var loadedData = new Cache<string, object>();
-			// BBEEEUUUUUUAAAAAHHHHH... 
-					   /*%%%%%
-					   %%%% = =
-					   %%C    >
-						_)' _( .' ,
-					 __/ |_/\   " *. o
-					/` \_\ \/     %`= '_  .
-				   /  )   \/|      .^',*. ,
-				  /' /-   o/       - " % '_
-				 /\_/     <       = , ^ ~ .
-				 )_o|----'|          .`  '
-			 ___// (_  - (\
-			///-(    \'  */
+		public static List<Model> LoadData() {
+			_conn = new SQLiteConnection(Conf.savePath + currentSave.Filename, SQLiteOpenFlags.ReadWrite);
+			var loadedData = new List<Model>();
 			var subclasses =
-			from assembly in System.AppDomain.CurrentDomain.GetAssemblies()
+			from assembly in AppDomain.CurrentDomain.GetAssemblies()
 			from type in assembly.GetTypes()
-			where type.IsSubclassOf(typeof(Model<>))
+			where type.IsSubclassOf(typeof(Model))
 			select type;
 
 			foreach(var c in subclasses) {
-				var instance = System.Activator.CreateInstance(c);
-				Debug.Log(instance);
-				var data = _conn.Table(instance);
-				foreach (Model item in data) {
-					loadedData.Add(item._Id, item);
+				var instance = Activator.CreateInstance(c);
+				try {
+					var data = _conn.Table(instance);
+					foreach (Model item in data) {
+						loadedData.Add(item);
+					}
+				} catch (Exception e) {
+					// it's gonna complain about missing tables. ignore them
 				}
 			}
+			_conn.Close();
+			_conn = null;
 			return loadedData;
 		}
 	}

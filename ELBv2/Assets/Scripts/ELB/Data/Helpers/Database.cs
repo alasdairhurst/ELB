@@ -12,7 +12,7 @@ namespace ELB.Data.Helpers {
 
 		public Database() {
 			cache = new Cache<string, Models.Generated.Model>();
-			connection = new SQLiteConnection(Conf.dbPath, SQLiteOpenFlags.ReadWrite);
+			connection = new SQLiteConnection(Conf.dbPath, SQLiteOpenFlags.ReadOnly);
 		}
 
 		public Model GetOne<Model>(string id, bool bypassCache = false) where Model : Models.Generated.Model, new() {
@@ -78,10 +78,6 @@ namespace ELB.Data.Helpers {
 				}
 			}
 			return models;
-		}
-
-		public SQLiteConnection getConn() {
-			return connection;
 		}
 	}
 }

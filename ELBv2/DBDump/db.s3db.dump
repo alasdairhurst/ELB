@@ -22,8 +22,8 @@ CREATE TABLE "Board" (
 	`_Id`	TEXT NOT NULL DEFAULT '-1',
 	`BoardSize`	INTEGER NOT NULL DEFAULT '1',
 	`CellSize`	FLOAT NOT NULL DEFAULT '1',
-	`Cells_ids`	TEXT,
-	`Name`	TEXT,
+	`Cells`	TEXT,
+	`Name`	INTEGER,
 	`Scale`	FLOAT DEFAULT '1',
 	PRIMARY KEY(`_Id`)
 );

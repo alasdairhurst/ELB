@@ -90,9 +90,6 @@ namespace ELB.Data.Helpers {
 			var compressedModel = convertToGenModel(model);
 			// set the model
 			state.SetOne(model._Id, compressedModel);
-			foreach(object m in state.Values) {
-				Debug.Log(m);
-			}
 		}
 
 		private static Model convertToModel<Model>(Models.Generated.Model genModel) where Model : Models.Model, new() {
@@ -110,9 +107,6 @@ namespace ELB.Data.Helpers {
 
 				// get value to write
 				object value = sp.GetValue(genModel, null);
-				Debug.Log(sp.Name);
-				Debug.Log(value);
-
 				// check if prop is a collection or model
 				if (TypeHelper.IsSubclassOfRawGeneric(typeof(Models.Model<>), pi.PropertyType) ||
 					TypeHelper.IsSubclassOfRawGeneric(typeof(Collections.Collection<>), pi.PropertyType)) {
@@ -163,15 +157,20 @@ namespace ELB.Data.Helpers {
 		}
 
 		public static void Save() {
-			SaveManager.SaveData(state);
+			SaveManager.SaveData(getDataToSave());
 		}
 
 		public static void Save(SaveInfo save) {
-			SaveManager.SaveData(state, save);
+			SaveManager.SaveData(getDataToSave(), save);
 		}
 
-		public static SQLite4Unity3d.SQLiteConnection getConnection() {
-			return db.getConn();
+		private static List<Models.Generated.Model> getDataToSave() {
+			var toSave = new List<Models.Generated.Model>();
+			foreach(Models.Generated.Model model in state.Values) {
+				// TODO: check if it's in the database and unchanged
+				toSave.Add(model);
+			}
+			return toSave;
 		}
 	}
 }
