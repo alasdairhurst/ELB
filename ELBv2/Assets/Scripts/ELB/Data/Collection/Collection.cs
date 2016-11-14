@@ -16,8 +16,8 @@ namespace ELB.Data.Collections {
 			Fetch(dbString);
 		}
 
-		public string ToDBString() {
-			return string.Join(", ", this.Select(x => { return x._Id; }).ToArray());
+		public string DBString() {
+			return string.Join("\n", this.Select(x => { return x._Id; }).ToArray());
 		}
 
 		public bool Fetch(IEnumerable<string> ids) {
@@ -35,7 +35,6 @@ namespace ELB.Data.Collections {
 			return Fetch(this.Select(x => x._Id));
 		}
 
-
 		public bool Fetch(string dbString) {
 			return Fetch(
 				dbString.Split('\n')
@@ -51,7 +50,7 @@ namespace ELB.Data.Collections {
 
 		public void SaveTemp() {
 			foreach (Model m in this) {
-				GameState.Update(m);
+				GameState.Update2(m);
 			}
 		}
 

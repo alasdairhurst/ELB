@@ -1,6 +1,4 @@
-﻿using SQLite4Unity3d;
-using System.Reflection;
-using UnityEngine;
+﻿using System.Reflection;
 using ELB.Utils;
 using System.Linq;
 using ELB.Data.Helpers;
@@ -82,7 +80,6 @@ namespace ELB.Data.Models {
 		protected virtual void Initialise<T>(T model) where T : Model { }
 
 		// Props
-		[PrimaryKey]
 		public string _Id { get; set; }
 
 		// Methods
@@ -186,48 +183,7 @@ namespace ELB.Data.Models {
 
 		// Save contents of model into state
 		public void SaveState<T>() where T : Model, new(){
-			GameState.Update((T)this);
-		}
-
-		public T GetCompressedModel<T>() where T : Model, new() {
-			T model = new T();
-			PropertyInfo[] properties = this.GetType().GetProperties();
-
-			foreach (PropertyInfo pi in properties) {
-				if (!pi.CanWrite) {
-					continue;
-				}
-
-				// check if prop has an associated _ids string
-				var idsProp = properties.Where(x => x.Name == pi.Name + "_ids").FirstOrDefault();
-				if (idsProp != null) {
-					// has _ids string associated. we don't want to write it
-					continue;
-				}
-				object value;
-				// if property is an id string
-				if (pi.Name.EndsWith("_ids")) {
-					// extract the ids string out of the associated collection and write it
-					var collectionPropName = pi.Name.Substring(0, pi.Name.LastIndexOf("_ids"));
-					// try to find the collection property that is mapped to the current id prop
-					var collectionProp = properties.Where(x => x.Name == collectionPropName).FirstOrDefault();
-					if (collectionProp == null) {
-						continue;
-					}
-					// call the method on the collection to turn it to a string
-					var collection = collectionProp.GetValue(this, null);
-					value = collection.GetType().GetMethod("ToDBString")
-						.Invoke(collection, null);
-
-				} else {
-					// get the value of the current property
-					value = pi.GetValue(this, null);
-				}
-				// set the value in the model
-				pi.SetValue(model, value, null);
-			}
-			// return the model
-			return model;
+			GameState.Update2((T)this);
 		}
 	}
 }

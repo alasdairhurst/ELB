@@ -1,21 +1,25 @@
-﻿using SQLite4Unity3d;
+﻿using ELB.Data.Collections;
+using SQLite4Unity3d;
 using System.Collections.Generic;
 using System.Linq;
+using ELB.Data.Models;
+using UnityEngine;
 
 namespace ELB.Data.Helpers {
 	public class Database {
-		private Cache<string, Models.Model> cache;
+		private Cache<string, Models.Generated.Model> cache;
 		private SQLiteConnection connection;
 
 		public Database() {
-			cache = new Cache<string, Models.Model>();
-			connection = new SQLiteConnection(Conf.dbPath, SQLiteOpenFlags.ReadOnly);
+			cache = new Cache<string, Models.Generated.Model>();
+			connection = new SQLiteConnection(Conf.dbPath, SQLiteOpenFlags.ReadWrite);
 		}
 
-		public Model GetOne<Model>(string id, bool bypassCache = false) where Model : Models.Model, new() {
+		public Model GetOne<Model>(string id, bool bypassCache = false) where Model : Models.Generated.Model, new() {
+			Debug.Log(typeof(Model));
 			Model model = null;
 			if (!bypassCache) {
-				model = cache.GetOne<Model>(id);
+				model = cache.GetOne(id, model);
 			}
 			if (model == null) {
 				model = connection.Find<Model>(id);
@@ -26,12 +30,12 @@ namespace ELB.Data.Helpers {
 			return model;
 		}
 
-		public Collections.Collection<Model> Get<Model>(IEnumerable<string> ids, bool bypassCache = false) where Model : Models.Model, new() {
+		public List<Model> Get<Model>(IEnumerable<string> ids, bool bypassCache = false) where Model : Models.Generated.Model, new() {
 			int idCount = ids.Count();
 			if (idCount == 0) {
-				return new Collections.Collection<Model>();
+				return new List<Model>();
 			}
-			var models = new Collections.Collection<Model>();
+			var models = new List<Model>();
 			if (!bypassCache) {
 				models.AddRange(cache.Get<Model>(ids));
 			}
@@ -49,7 +53,7 @@ namespace ELB.Data.Helpers {
 			return models;
 		}
 
-		public Collections.Collection<Model> GetAll<Model>(bool bypassCache = false) where Model : Models.Model, new() {
+		public List<Model> GetAll<Model>(Model instance = default(Model), bool bypassCache = false) where Model : Models.Generated.Model, new() {
 			// until unity gets c# 6 support we will be using sqlite4unity3d.
 			// afterwards we can switch to a better library such as sqlite-net
 
@@ -59,7 +63,7 @@ namespace ELB.Data.Helpers {
 			// foreach (Model mo in m) {
 			// 	_cache.set(mo._Id, mo);
 			// }
-			var models = new Collections.Collection<Model>();
+			var models = new List<Model>();
 			if (!bypassCache) {
 				models.AddRange(cache.GetAll<Model>());
 			}
@@ -74,6 +78,10 @@ namespace ELB.Data.Helpers {
 				}
 			}
 			return models;
+		}
+
+		public SQLiteConnection getConn() {
+			return connection;
 		}
 	}
 }

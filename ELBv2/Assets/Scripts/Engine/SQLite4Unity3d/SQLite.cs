@@ -1926,7 +1926,11 @@ namespace SQLite4Unity3d
 
 		public static string SqlDecl (TableMapping.Column p, bool storeDateTimeAsTicks)
 		{
-			string decl = "\"" + p.Name + "\" " + SqlType (p, storeDateTimeAsTicks) + " ";
+			string type = SqlType(p, storeDateTimeAsTicks);
+			if (type == null) {
+				return null;
+			}
+			string decl = "\"" + p.Name + "\" " + type + " ";
 			
 			if (p.IsPK) {
 				decl += "primary key ";
@@ -1977,7 +1981,8 @@ namespace SQLite4Unity3d
 			} else if (clrType == typeof(Guid)) {
 				return "varchar(36)";
 			} else {
-				throw new NotSupportedException ("Don't know about " + clrType);
+				return null;
+				//throw new NotSupportedException ("Don't know about " + clrType);
 			}
 		}
 

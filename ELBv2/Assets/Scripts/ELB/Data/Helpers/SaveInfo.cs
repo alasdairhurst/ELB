@@ -1,7 +1,7 @@
 ﻿namespace ELB.Data.Helpers {
-	public class Save {
+	public class SaveInfo {
 		public string Filename;
 		public System.DateTime Time;
-		public bool current;
+		public bool IsCurrent;
 	}
 }

@@ -1,21 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using ELB.Data.Collections;
-using ELB.Data.Models;
 
 namespace ELB.Data.Helpers {
-	public class Cache<K, V> {
+	public class Cache<K, V> : Dictionary<K, V> {
 
 		private double timeToLive = double.PositiveInfinity;
 		private Dictionary<K, long> storedTime;
-		private Dictionary<K, V> storedData;
 
 		private long currentTime {
 			get { return DateTime.Now.ToFileTime(); }
 		}
 
 		public Cache() {
-			storedData = new Dictionary<K, V>();
 			storedTime = new Dictionary<K, long>();
 		}
 
@@ -26,15 +22,15 @@ namespace ELB.Data.Helpers {
 
 		public void SetOne(K key, V value) {
 			storedTime[key] = currentTime;
-			storedData[key] = value;
+			this[key] = value;
 		}
 
-		public T GetOne<T>(K key) where T : V {
-			if (!storedData.ContainsKey(key)) {
+		public T GetOne<T>(K key, T instance = default(T)) where T : V {
+			if (!ContainsKey(key)) {
 				return default(T);
 			} else {
 				V value;
-				storedData.TryGetValue(key, out value);
+				TryGetValue(key, out value);
 				if (double.IsInfinity(timeToLive)) {
 					return (T)(object)value;
 				} else {
@@ -47,14 +43,14 @@ namespace ELB.Data.Helpers {
 						return default(T);
 					} else {
 						storedTime.Remove(key);
-						storedData.Remove(key);
+						Remove(key);
 						return default(T);
 					}
 				}
 			}
 		}
 
-		public IEnumerable<T> Get<T>(IEnumerable<K> keys) where T : V {
+		public IEnumerable<T> Get<T>(IEnumerable<K> keys, T instance = default(T)) where T : V {
 			var vals = new List<T>();
 			foreach (K key in keys) {
 				T val = GetOne<T>(key);
@@ -65,9 +61,9 @@ namespace ELB.Data.Helpers {
 			return vals;
 		}
 
-		public IEnumerable<T> GetAll<T>() where T : V {
+		public IEnumerable<T> GetAll<T>(T instance = default(T)) where T : V {
 			var vals = new List<T>();
-			foreach (K key in storedData.Keys) {
+			foreach (K key in Keys) {
 				T val = GetOne<T>(key);
 				if (!EqualityComparer<T>.Default.Equals(val, default(T))) {
 					vals.Add(val);
@@ -76,8 +72,8 @@ namespace ELB.Data.Helpers {
 			return vals;
 		}
 
-		public void Clear() {
-			storedData.Clear();
+		public new void Clear() {
+			base.Clear();
 			storedTime.Clear();
 		}
 
