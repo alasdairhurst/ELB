@@ -87,50 +87,6 @@ namespace ELB.Data.Helpers {
 		}
 
 		public static void Update<Model>(Model model) where Model : Models.Model, new() {
-			// should it be up to the model or consumer of the model to update the state?
-			//Model compressedModel = new Model();
-			var compressedModel = Activator.CreateInstance(modelGeneratedTypeMap[typeof(Model)]);
-
-			PropertyInfo[] properties = model.GetType().GetProperties();
-
-			foreach (PropertyInfo pi in properties) {
-				if (!pi.CanWrite) {
-					continue;
-				}
-
-				// check if prop has an associated _ids string
-				var idsProp = properties.Where(x => x.Name == pi.Name + "_ids").FirstOrDefault();
-				if (idsProp != null) {
-					// has _ids string associated. we don't want to write it
-					continue;
-				}
-				object value;
-				// if property is an id string
-				if (pi.Name.EndsWith("_ids")) {
-					// extract the ids string out of the associated collection and write it
-					var collectionPropName = pi.Name.Substring(0, pi.Name.LastIndexOf("_ids"));
-					// try to find the collection property that is mapped to the current id prop
-					var collectionProp = properties.Where(x => x.Name == collectionPropName).FirstOrDefault();
-					if (collectionProp == null) {
-						continue;
-					}
-					// call the method on the collection to turn it to a string
-					var collection = collectionProp.GetValue(model, null);
-					value = collection.GetType().GetMethod("DBString")
-						.Invoke(collection, null);
-
-				} else {
-					// get the value of the current property
-					value = pi.GetValue(model, null);
-				}
-				// set the value in the model
-				pi.SetValue(compressedModel, value, null);
-			}
-			// set the model
-			state.SetOne(model._Id, compressedModel);
-		}
-
-		public static void Update2<Model>(Model model) where Model : Models.Model, new() {
 			var compressedModel = convertToGenModel(model);
 			// set the model
 			state.SetOne(model._Id, compressedModel);

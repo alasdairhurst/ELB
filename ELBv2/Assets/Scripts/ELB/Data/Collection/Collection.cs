@@ -50,7 +50,7 @@ namespace ELB.Data.Collections {
 
 		public void SaveTemp() {
 			foreach (Model m in this) {
-				GameState.Update2(m);
+				GameState.Update(m);
 			}
 		}
 

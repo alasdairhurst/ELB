@@ -183,7 +183,7 @@ namespace ELB.Data.Models {
 
 		// Save contents of model into state
 		public void SaveState<T>() where T : Model, new(){
-			GameState.Update2((T)this);
+			GameState.Update((T)this);
 		}
 	}
 }
