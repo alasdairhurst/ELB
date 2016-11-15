@@ -8,9 +8,16 @@ using UnityEngine;
 namespace ELB.Data.Helpers {
 	public static class GameState {
 
+		private enum ModelFlag {
+			Set,
+			Updated,
+			MarkedForDeletion
+		};
+		private static Dictionary<string, ModelFlag> modelFlags = new Dictionary<string, ModelFlag>();
 		private static Database db = new Database();
 		private static Cache<string, object> state = new Cache<string, object>();
 		private static Dictionary<Type, Type> modelGeneratedTypeMap = TypeHelper.CreateTypesForSubclassesOf(typeof(Models.Model<>));
+		
 
 		public static Model FetchOne<Model>(string id, bool bypassState = false) where Model : Models.Model, new() {
 			var genInstance = Activator.CreateInstance(modelGeneratedTypeMap[typeof(Model)]);
@@ -26,6 +33,7 @@ namespace ELB.Data.Helpers {
 					}
 				);
 				state.SetOne(id, fetchedModel);
+				modelFlags[id] = ModelFlag.Set;
 			}
 			return convertToModel<Model>((Models.Generated.Model)fetchedModel);
 		}
@@ -54,6 +62,7 @@ namespace ELB.Data.Helpers {
 
 					foreach (Models.Generated.Model mo in m) {
 						state.SetOne(mo._Id, mo);
+						modelFlags[mo._Id] = ModelFlag.Set;
 						genModels.Add(mo);
 					}
 				}
@@ -62,10 +71,6 @@ namespace ELB.Data.Helpers {
 				models.Add(convertToModel<Model>(m));
 			}
 			return models;
-		}
-
-		static List<T> Cast<T>(T instance, List<T> GenericList) where T : Models.Generated.Model {
-			return GenericList;
 		}
 
 		public static Collections.Collection<Model> FetchAll<Model>(bool bypassState = false) where Model : Models.Model, new() {
@@ -79,8 +84,13 @@ namespace ELB.Data.Helpers {
 						.MakeGenericMethod(genInstance.GetType())
 						.Invoke(db, null);
 				foreach (Models.Generated.Model mo in fetched) {
-					state.SetOne(mo._Id, mo);
-					models.Add(convertToModel<Model>(mo));
+					if (!state.ContainsKey(mo._Id)) {
+						state.SetOne(mo._Id, mo);
+						modelFlags[mo._Id] = ModelFlag.Set;
+						models.Add(convertToModel<Model>(mo));
+					} else {
+						models.Add(convertToModel<Model>((Models.Generated.Model)state[mo._Id]));
+					}
 				}
 			}
 			return models;
@@ -89,7 +99,12 @@ namespace ELB.Data.Helpers {
 		public static void Update<Model>(Model model) where Model : Models.Model, new() {
 			var compressedModel = convertToGenModel(model);
 			// set the model
-			state.SetOne(model._Id, compressedModel);
+			if (compressedModel != state[model._Id]) {
+				state.SetOne(model._Id, compressedModel);
+				modelFlags[model._Id] = ModelFlag.Updated;
+			} else {
+				Debug.Log("models actually matched");
+			}
 		}
 
 		private static Model convertToModel<Model>(Models.Generated.Model genModel) where Model : Models.Model, new() {
