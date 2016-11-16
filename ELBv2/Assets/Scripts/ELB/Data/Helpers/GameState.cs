@@ -16,7 +16,7 @@ namespace ELB.Data.Helpers {
 		private static Dictionary<string, ModelFlag> modelFlags = new Dictionary<string, ModelFlag>();
 		private static Database db = new Database();
 		private static Cache<string, object> state = new Cache<string, object>();
-		private static Dictionary<Type, Type> modelGeneratedTypeMap = TypeHelper.CreateTypesForSubclassesOf(typeof(Models.Model<>));
+		private static Dictionary<Type, Type> modelGeneratedTypeMap = TypeHelper.CreateTypesForSubclassesOf(typeof(Models.Model));
 		
 
 		public static Model FetchOne<Model>(string id, bool bypassState = false) where Model : Models.Model, new() {
@@ -133,7 +133,8 @@ namespace ELB.Data.Helpers {
 				// get value to write
 				object value = sp.GetValue(genModel, null);
 				// check if prop is a collection or model
-				if (TypeHelper.IsSubclassOfRawGeneric(typeof(Models.Model<>), pi.PropertyType) ||
+				
+				if (pi.PropertyType.IsSubclassOf(typeof(Models.Model)) ||
 					TypeHelper.IsSubclassOfRawGeneric(typeof(Collections.Collection<>), pi.PropertyType)) {
 					var instance = Activator.CreateInstance(pi.PropertyType);
 					if (value != null) {
@@ -166,7 +167,7 @@ namespace ELB.Data.Helpers {
 				object value = pi.GetValue(model, null);
 
 				// check if prop is a collection or model
-				if (TypeHelper.IsSubclassOfRawGeneric(typeof(Models.Model<>), pi.PropertyType)) {
+				if (pi.PropertyType.IsSubclassOf(typeof(Models.Model))) {
 					value = ((Models.Model)value)._Id;
 				} else if (TypeHelper.IsSubclassOfRawGeneric(typeof(Collections.Collection<>), pi.PropertyType)) {
 					value = value.GetType().GetMethod("DBString").Invoke(pi.GetValue(model, null), null);

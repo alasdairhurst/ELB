@@ -2,6 +2,6 @@
 using System;
 
 namespace ELB.Data.Models {
-	class Card : Model<Card> {
+	class Card : Model {
 	}
 }

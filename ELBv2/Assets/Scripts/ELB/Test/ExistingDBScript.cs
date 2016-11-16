@@ -25,7 +25,7 @@ public class ExistingDBScript : MonoBehaviour {
 
 		if (save == null) {
 			board.Name = "changedName";
-			board.SaveState();
+			board.Save();
 			save = SaveManager.CreateSave();
 			GameState.Save(save);
 			Debug.Log("Saving to " + save.Filename);

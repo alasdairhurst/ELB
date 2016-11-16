@@ -7,24 +7,6 @@ using ELB.Data.Collections;
 
 namespace ELB.Data.Models {
 
-	public enum FetchAction {
-		None,
-		Fetch,
-		LoadTemp
-	}
-
-	public abstract class Model<T> : Model where T : Model, new() {
-
-		public Model() : base() { }
-
-		public override bool Fetch(string id) {
-			return Fetch<T>(id);
-		}
-		public override void SaveState() {
-			SaveState<T>();
-		}
-	}
-
 	public abstract class Model : iFancyString {
 
 		// cache of the data stored by the current game
@@ -37,12 +19,12 @@ namespace ELB.Data.Models {
 		}
 
 		public Model(Model model) : base() {
-			Init(model);
+			Initialise(model);
 		}
 
 		// Initialisers
 
-		private void Init<T>(T model) where T : Model {
+		private void Initialise(Model model) {
 			PropertyInfo[] properties = model.GetType().GetProperties();
 
 			foreach (PropertyInfo pi in properties) {
@@ -74,10 +56,7 @@ namespace ELB.Data.Models {
 				// set the collection on the current model
 				collectionProp.SetValue(this, o, null);
 			}
-			Initialise(model);
 		}
-
-		protected virtual void Initialise<T>(T model) where T : Model { }
 
 		// Props
 		public string _Id { get; set; }
@@ -161,34 +140,35 @@ namespace ELB.Data.Models {
 		}
 
 		// Fetch model contents from state
-		public bool Fetch<T>(string id) where T : Model, new() {
-			var model = GameState.FetchOne<T>(id);
-			if (model == null) {
-				return false;
+		public void Fetch(string id) {
+			var model = typeof(GameState).GetMethod("FetchOne")
+				.MakeGenericMethod(GetType())
+				.Invoke(null, new object[] {
+					id, false
+				});
+			if (model != null) {
+				Initialise((Model)model);
 			}
-			Init(model);
-			return true;
 		}
 
 		// Fetch model contents from state
-		public abstract bool Fetch(string id);
-
-		// Fetch model contents from state
-		public bool Fetch() {
-			return Fetch(_Id);
+		public void Fetch() {
+			Fetch(_Id);
 		}
 
+		// Delete this model from the state
 		public void Delete() {
 			// reset the model? change the id?
 			GameState.Delete(_Id);
 		}
 
 		// Save contents of model into state
-		public abstract void SaveState();
-
-		// Save contents of model into state
-		public void SaveState<T>() where T : Model, new(){
-			GameState.Update((T)this);
+		public void Save() {
+			typeof(GameState).GetMethod("Update")
+				.MakeGenericMethod(GetType())
+				.Invoke(null, new[] {
+					this
+				});
 		}
 	}
 }

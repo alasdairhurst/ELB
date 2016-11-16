@@ -20,12 +20,11 @@ namespace ELB.Data.Helpers {
 			return false;
 		}
 
-		public static Dictionary<Type, Type> CreateTypesForSubclassesOf(Type t, string ns = "ELB.Data.Models.Generated") {
-			var codeNamespace = new CodeNamespace(ns);
+		public static Dictionary<Type, Type> CreateTypesForSubclassesOf(Type t) {
+			var codeNamespace = new CodeNamespace(t.FullName + ".Generated");
 			codeNamespace.Imports.Add(new CodeNamespaceImport("System"));
 
-			var subclasses = t.Assembly.GetTypes().Where(type => IsSubclassOfRawGeneric(t, type));
-
+			var subclasses = t.Assembly.GetTypes().Where(type => type.IsSubclassOf(t));
 			foreach (var c in subclasses) {
 				var newType = new CodeTypeDeclaration(c.Name) {
 					TypeAttributes = TypeAttributes.Public

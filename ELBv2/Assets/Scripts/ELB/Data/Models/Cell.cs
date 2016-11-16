@@ -2,7 +2,7 @@
 using ELB.Data.Collections;
 
 namespace ELB.Data.Models {
-	public class Cell : Model<Cell> {
+	public class Cell : Model {
 		public int Size { get; set; }
 		public float Height { get; set; }
 		public Landscape Landscape { get; set; }

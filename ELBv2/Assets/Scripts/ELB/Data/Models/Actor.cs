@@ -2,6 +2,6 @@
 using System;
 
 namespace ELB.Data.Models {
-	public class Actor : Model<Actor> {
+	public class Actor : Model {
 	}
 }

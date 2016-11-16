@@ -2,7 +2,7 @@
 using System;
 
 namespace ELB.Data.Models {
-	public class Player : Model<Player> {
+	public class Player : Model {
 		public int TeamId { get; set; }
 		public string UnitIds { get; set; }
 		public Collection<Unit> Units { get; set; }

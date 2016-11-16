@@ -1,7 +1,7 @@
 ﻿using System;
 
 namespace ELB.Data.Models {
-	public class Purchasable : Model<Purchasable> {
+	public class Purchasable : Model {
 		public string Name { get; set; }
 		public int Cost { get; set; }
 		public int Level { get; set; }
