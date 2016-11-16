@@ -16,7 +16,6 @@ namespace ELB.Data.Helpers {
 		}
 
 		public Model GetOne<Model>(string id, bool bypassCache = false) where Model : Models.Generated.Model, new() {
-			Debug.Log(typeof(Model));
 			Model model = null;
 			if (!bypassCache) {
 				model = cache.GetOne(id, model);

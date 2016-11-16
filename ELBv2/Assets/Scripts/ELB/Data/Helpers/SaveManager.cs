@@ -13,8 +13,8 @@ namespace ELB.Data.Helpers {
 		private static SQLiteConnection _conn;
 
 		private static string generateName() {
-			string date = System.DateTime.Now.ToString("yyMMddhhmmssfff");
-			string hexDate = System.Convert.ToString(long.Parse(date), 16);
+			string date = DateTime.Now.ToString("yyMMddhhmmssfff");
+			string hexDate = Convert.ToString(long.Parse(date), 16);
 			return string.Format("{0}{1}{2}", "elb_", hexDate, Conf.saveExt);
 		}
 

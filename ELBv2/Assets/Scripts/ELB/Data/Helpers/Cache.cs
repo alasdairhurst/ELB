@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 
 namespace ELB.Data.Helpers {
 	public class Cache<K, V> : Dictionary<K, V> {
@@ -28,34 +30,33 @@ namespace ELB.Data.Helpers {
 		public T GetOne<T>(K key, T instance = default(T)) where T : V {
 			if (!ContainsKey(key)) {
 				return default(T);
-			} else {
-				V value;
-				TryGetValue(key, out value);
-				if (double.IsInfinity(timeToLive)) {
-					return (T)(object)value;
-				} else {
-					long savedTime;
-					storedTime.TryGetValue(key, out savedTime);
-					if (savedTime + timeToLive <= currentTime) {
-						if (value is T) {
-							return (T)(object)value;
-						}
-						return default(T);
-					} else {
-						storedTime.Remove(key);
-						Remove(key);
-						return default(T);
-					}
+			}
+			V value;
+			TryGetValue(key, out value);
+			if (!double.IsInfinity(timeToLive)) {
+				long savedTime;
+				storedTime.TryGetValue(key, out savedTime);
+				if (savedTime + timeToLive > currentTime) {
+					storedTime.Remove(key);
+					Remove(key);
+					return default(T);
 				}
 			}
+			if (!(value is T)) {
+				throw new Error("Key does not correspond to specified value type");
+			}
+			return (T)(object)value;
+			
 		}
 
 		public IEnumerable<T> Get<T>(IEnumerable<K> keys, T instance = default(T)) where T : V {
 			var vals = new List<T>();
-			foreach (K key in keys) {
-				T val = GetOne<T>(key);
-				if (!EqualityComparer<T>.Default.Equals(val, default(T))) {
-					vals.Add(val);
+			foreach (K key in Keys) {
+				if (keys.Contains(key) && this[key] is T) {
+					T val = GetOne<T>(key);
+					if (!EqualityComparer<T>.Default.Equals(val, default(T))) {
+						vals.Add(val);
+					}
 				}
 			}
 			return vals;
@@ -64,9 +65,11 @@ namespace ELB.Data.Helpers {
 		public IEnumerable<T> GetAll<T>(T instance = default(T)) where T : V {
 			var vals = new List<T>();
 			foreach (K key in Keys) {
-				T val = GetOne<T>(key);
-				if (!EqualityComparer<T>.Default.Equals(val, default(T))) {
-					vals.Add(val);
+				if (this[key] is T) {
+					T val = GetOne<T>(key);
+					if (!EqualityComparer<T>.Default.Equals(val, default(T))) {
+						vals.Add(val);
+					}
 				}
 			}
 			return vals;

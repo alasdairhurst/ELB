@@ -178,6 +178,11 @@ namespace ELB.Data.Models {
 			return Fetch(_Id);
 		}
 
+		public void Delete() {
+			// reset the model? change the id?
+			GameState.Delete(_Id);
+		}
+
 		// Save contents of model into state
 		public abstract void SaveState();
 

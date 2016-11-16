@@ -8,10 +8,10 @@ using UnityEngine;
 namespace ELB.Data.Helpers {
 	public static class GameState {
 
-		private enum ModelFlag {
-			Set,
-			Updated,
-			MarkedForDeletion
+		public enum ModelFlag {
+			None,
+			LoadedFromDB,
+			Modified
 		};
 		private static Dictionary<string, ModelFlag> modelFlags = new Dictionary<string, ModelFlag>();
 		private static Database db = new Database();
@@ -33,7 +33,7 @@ namespace ELB.Data.Helpers {
 					}
 				);
 				state.SetOne(id, fetchedModel);
-				modelFlags[id] = ModelFlag.Set;
+				modelFlags[id] = ModelFlag.LoadedFromDB;
 			}
 			return convertToModel<Model>((Models.Generated.Model)fetchedModel);
 		}
@@ -62,7 +62,7 @@ namespace ELB.Data.Helpers {
 
 					foreach (Models.Generated.Model mo in m) {
 						state.SetOne(mo._Id, mo);
-						modelFlags[mo._Id] = ModelFlag.Set;
+						modelFlags[mo._Id] = ModelFlag.LoadedFromDB;
 						genModels.Add(mo);
 					}
 				}
@@ -77,16 +77,22 @@ namespace ELB.Data.Helpers {
 			var genInstance = (Models.Generated.Model)Activator.CreateInstance(modelGeneratedTypeMap[typeof(Model)]);
 			var models = new Collections.Collection<Model>();
 			if (!bypassState) {
-				models.AddRange(state.GetAll<Model>());
+				var fetched = state.GetAll(genInstance);
+				foreach (var m in fetched) {
+					if (genInstance.GetType() == m.GetType()) {
+						models.Add(convertToModel<Model>(m));
+					}
+					
+				}		
 			}
 			if (bypassState || models.Count == 0) {
 				var fetched = (IList)typeof(Database).GetMethod("GetAll")
 						.MakeGenericMethod(genInstance.GetType())
-						.Invoke(db, null);
+						.Invoke(db, new object[] { genInstance, false });
 				foreach (Models.Generated.Model mo in fetched) {
 					if (!state.ContainsKey(mo._Id)) {
 						state.SetOne(mo._Id, mo);
-						modelFlags[mo._Id] = ModelFlag.Set;
+						modelFlags[mo._Id] = ModelFlag.LoadedFromDB;
 						models.Add(convertToModel<Model>(mo));
 					} else {
 						models.Add(convertToModel<Model>((Models.Generated.Model)state[mo._Id]));
@@ -101,13 +107,17 @@ namespace ELB.Data.Helpers {
 			// set the model
 			if (compressedModel != state[model._Id]) {
 				state.SetOne(model._Id, compressedModel);
-				modelFlags[model._Id] = ModelFlag.Updated;
+				modelFlags[model._Id] = ModelFlag.Modified;
 			} else {
 				Debug.Log("models actually matched");
 			}
 		}
 
 		private static Model convertToModel<Model>(Models.Generated.Model genModel) where Model : Models.Model, new() {
+			if (typeof(Model).Name != genModel.GetType().Name) {
+				throw new Error(string.Format("Trying to convert {0} to {1}", genModel.GetType().FullName, typeof(Model).FullName));
+			}
+			
 			var model = Activator.CreateInstance(typeof(Model));
 			PropertyInfo[] stateModelProperties = genModel.GetType().GetProperties();
 			PropertyInfo[] modelProperties = model.GetType().GetProperties();
@@ -171,6 +181,10 @@ namespace ELB.Data.Helpers {
 			return (Models.Generated.Model)genModel;
 		}
 
+		public static void Delete(string id) {
+			state.Remove(id);
+		}
+
 		public static void Save() {
 			SaveManager.SaveData(getDataToSave());
 		}
@@ -182,8 +196,11 @@ namespace ELB.Data.Helpers {
 		private static List<Models.Generated.Model> getDataToSave() {
 			var toSave = new List<Models.Generated.Model>();
 			foreach(Models.Generated.Model model in state.Values) {
-				// TODO: check if it's in the database and unchanged
-				toSave.Add(model);
+				// check if the model is deleted, created or updated
+				var flag = modelFlags[model._Id];
+				if (flag == ModelFlag.Modified) {
+					toSave.Add(model);
+				}		
 			}
 			return toSave;
 		}
