@@ -5,12 +5,12 @@ using System.IO;
 using ELB.Data.Models.Generated;
 using System.Linq;
 using System;
+using System.Collections;
 
 namespace ELB.Data.Helpers {
 	static class SaveManager {
 
 		private static SaveInfo currentSave;
-		private static SQLiteConnection _conn;
 
 		private static string generateName() {
 			string date = DateTime.Now.ToString("yyMMddhhmmssfff");
@@ -70,13 +70,11 @@ namespace ELB.Data.Helpers {
 			}
 		}
 
-		public static void SaveData(List<Model> data, SaveInfo save) {
-			SetCurrentSave(save);
-			SaveData(data);
-		}
-
-		public static void SaveData(List<Model> data) {
-			_conn = new SQLiteConnection(Conf.savePath + currentSave.Filename, SQLiteOpenFlags.ReadWrite);
+		public static void SaveData(List<Model> data, SaveInfo save = null) {
+			if (save != null) {
+				SetCurrentSave(save);
+			}
+			var _conn = new SQLiteConnection(Conf.savePath + currentSave.Filename, SQLiteOpenFlags.ReadWrite);
 			// remember types we already created tables for
 			var types = new List<Type>();
 			foreach(Model v in data) {
@@ -87,17 +85,13 @@ namespace ELB.Data.Helpers {
 				}
 				_conn.InsertOrReplace(v);
 			}
-			_conn.Close();
-			_conn = null;
 		}
 
-		public static List<Model> LoadData(SaveInfo save) {
-			SetCurrentSave(save);
-			return LoadData();
-		}
-
-		public static List<Model> LoadData() {
-			_conn = new SQLiteConnection(Conf.savePath + currentSave.Filename, SQLiteOpenFlags.ReadWrite);
+		public static List<Model> LoadData(SaveInfo save = null) {
+			if (save != null) {
+				SetCurrentSave(save);
+			}
+			var _conn = new SQLiteConnection(Conf.savePath + currentSave.Filename, SQLiteOpenFlags.ReadWrite);
 			var loadedData = new List<Model>();
 			var subclasses =
 			from assembly in AppDomain.CurrentDomain.GetAssemblies()
@@ -108,16 +102,17 @@ namespace ELB.Data.Helpers {
 			foreach(var c in subclasses) {
 				var instance = Activator.CreateInstance(c);
 				try {
-					var data = _conn.Table(instance);
-					foreach (Model item in data) {
-						loadedData.Add(item);
+					_conn.Table(instance).ToList();
+					var query = _conn.GetType().GetMethod("Table", new Type[] { })
+						.MakeGenericMethod(c)
+						.Invoke(_conn, null) as IEnumerable;
+					foreach (var item in query) {
+						loadedData.Add((Model)item);
 					}
-				} catch (Exception e) {
+				} catch (SQLiteException e) {
 					// it's gonna complain about missing tables. ignore them
 				}
 			}
-			_conn.Close();
-			_conn = null;
 			return loadedData;
 		}
 	}

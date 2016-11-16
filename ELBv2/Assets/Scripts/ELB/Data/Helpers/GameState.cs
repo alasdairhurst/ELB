@@ -186,24 +186,36 @@ namespace ELB.Data.Helpers {
 			state.Remove(id);
 		}
 
-		public static void Save() {
-			SaveManager.SaveData(getDataToSave());
-		}
-
-		public static void Save(SaveInfo save) {
-			SaveManager.SaveData(getDataToSave(), save);
-		}
-
-		private static List<Models.Generated.Model> getDataToSave() {
+		public static void Save(SaveInfo save = null) {
 			var toSave = new List<Models.Generated.Model>();
-			foreach(Models.Generated.Model model in state.Values) {
+			foreach (Models.Generated.Model model in state.Values) {
 				// check if the model is deleted, created or updated
 				var flag = modelFlags[model._Id];
 				if (flag == ModelFlag.Modified) {
 					toSave.Add(model);
-				}		
+				}
 			}
-			return toSave;
+			SaveManager.SaveData(toSave, save);
+		}
+
+		public static void Load(SaveInfo save = null) {
+			// first unload the current state
+			Unload();
+			var data = SaveManager.LoadData(save);
+			foreach (Models.Generated.Model m in data) {
+				state[m._Id] = m;
+				modelFlags[m._Id] = ModelFlag.Modified;
+				
+				
+			}
+		}
+
+		public static void Unload() {
+			foreach(Models.Generated.Model model in state.Values) {
+				if (modelFlags[model._Id] == ModelFlag.Modified) {
+					state.Remove(model._Id);
+				}
+			}
 		}
 	}
 }
