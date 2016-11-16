@@ -134,17 +134,16 @@ namespace ELB.Data.Helpers {
 				object value = sp.GetValue(genModel, null);
 				// check if prop is a collection or model
 				
-				if (pi.PropertyType.IsSubclassOf(typeof(Models.Model)) ||
-					TypeHelper.IsSubclassOfRawGeneric(typeof(Collections.Collection<>), pi.PropertyType)) {
-					var instance = Activator.CreateInstance(pi.PropertyType);
-					if (value != null) {
+				if ((pi.PropertyType.IsSubclassOf(typeof(Models.Model)) ||
+					TypeHelper.IsSubclassOfRawGeneric(typeof(Collections.Collection<>), pi.PropertyType))
+					&& value != null) {
+						var instance = Activator.CreateInstance(pi.PropertyType);
 						// call fetch on the collection/model - make sure the method invoked is the one that takes a string
 						pi.PropertyType.GetMethod("Fetch", new[] { typeof(string) })
 							.Invoke(instance, new[] {
 						value
 						});
-					}
-					value = instance;
+						value = instance;
 				}
 
 				// write value
@@ -205,8 +204,6 @@ namespace ELB.Data.Helpers {
 			foreach (Models.Generated.Model m in data) {
 				state[m._Id] = m;
 				modelFlags[m._Id] = ModelFlag.Modified;
-				
-				
 			}
 		}
 
