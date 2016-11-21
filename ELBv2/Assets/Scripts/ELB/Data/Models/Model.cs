@@ -60,6 +60,7 @@ namespace ELB.Data.Models {
 
 		// Props
 		public string _Id { get; set; }
+		public string _EditorID { get; set; }
 
 		// Methods
 

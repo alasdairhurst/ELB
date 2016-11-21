@@ -3,7 +3,9 @@
 namespace ELB.Data.Models.Generated {
 
 	public class Model {
-		[PrimaryKey]
+		[PrimaryKey, Unique]
 		public string _Id { get; set; }
+		[Unique]
+		public string _EditorID { get; set; }
 	}
 }
