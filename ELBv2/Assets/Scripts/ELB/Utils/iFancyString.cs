@@ -26,6 +26,15 @@ namespace ELB.Utils {
 	 *		{ 
 	 *			Pretty 
 	 *		}
+	 *		
+	 *	Id
+	 *		_Id
+	 *	
+	 *	EditorID
+	 *		_EditorID
+	 *	
+	 *	IdCombo
+	 *		EditorID (Id)
 	 *
 	 */
 	public enum StringOpts {
@@ -33,6 +42,9 @@ namespace ELB.Utils {
 		TwoLine = 1,
 		Pretty = 2,
 		Full = 3,
-		Short = 4
+		Short = 4,
+		Id = 5,
+		EditorID = 6,
+		IdCombo = 7
 	}
 }
