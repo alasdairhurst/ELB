@@ -1,19 +1,19 @@
-﻿using ELB.Data.Models;
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 [InitializeOnLoad]
 public static class LatestScenes {
-	private static string currentScene;
+	private static Scene currentScene;
 	static LatestScenes() {
-		currentScene = EditorApplication.currentScene;
+		currentScene = SceneManager.GetActiveScene();
 		EditorApplication.hierarchyWindowChanged += hierarchyWindowChanged;
 	}
 	private static void hierarchyWindowChanged() {
-		if (currentScene != EditorApplication.currentScene) {
+		if (currentScene != SceneManager.GetActiveScene()) {
 			//a scene change has happened
-			Debug.Log("Last Scene: " + currentScene);
-			currentScene = EditorApplication.currentScene;
+			Debug.Log("Last Scene: " + currentScene.name);
+			currentScene = SceneManager.GetActiveScene();
 		}
 	}
 }
