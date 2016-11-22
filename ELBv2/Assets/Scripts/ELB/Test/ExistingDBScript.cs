@@ -1,9 +1,7 @@
 ﻿using UnityEngine;
 using ELB.Data.Models;
 using ELB.Utils;
-using UnityEngine.SceneManagement;
 using ELB.Data.Helpers;
-using System.Linq;
 
 public class ExistingDBScript : MonoBehaviour {
 	// Use this for initialization
@@ -30,7 +28,9 @@ public class ExistingDBScript : MonoBehaviour {
 		} else {
 			GameState.Load(save);
 			board.Fetch("{9A69826B-5BC5-4F89-9066-6D52D598979B}");
+
 			Debug.Log(board.ToString(StringOpts.Pretty));
+			Debug.Log(board.ToString(StringOpts.IdCombo));
 		}
 	}
 }

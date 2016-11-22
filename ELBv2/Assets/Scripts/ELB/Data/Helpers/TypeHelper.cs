@@ -1,4 +1,5 @@
-﻿using Microsoft.CSharp;
+﻿using ELB.Data.Models;
+using Microsoft.CSharp;
 using System;
 using System.CodeDom;
 using System.CodeDom.Compiler;
@@ -33,7 +34,8 @@ namespace ELB.Data.Helpers {
 
 				PropertyInfo[] properties = c.GetProperties();
 				foreach (PropertyInfo pi in properties) {
-					if (pi.Name == "_Id") {
+					// ignore the property if it exists in the model base
+					if (typeof(ModelBase).GetProperties().Count(x => x.Name == pi.Name) != 0) {
 						continue;
 					}
 					var snippet = new CodeSnippetTypeMember {
