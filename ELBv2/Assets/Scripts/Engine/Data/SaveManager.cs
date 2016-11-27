@@ -93,11 +93,7 @@ namespace Engine.Data {
 			}
 			var _conn = new SQLiteConnection(Conf.savePath + currentSave.Filename, SQLiteOpenFlags.ReadWrite);
 			var loadedData = new List<ModelDB>();
-			var subclasses =
-			from assembly in AppDomain.CurrentDomain.GetAssemblies()
-			from type in assembly.GetTypes()
-			where type.IsSubclassOf(typeof(ModelDB))
-			select type;
+			var subclasses = GameState.GetGeneratedModelTypes();
 
 			foreach(var c in subclasses) {
 				var instance = Activator.CreateInstance(c);

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.CodeDom;
 using System.CodeDom.Compiler;
 using Microsoft.CSharp;
+using UnityEngine;
 
 namespace Engine.Data {
 	public static class GameState {
@@ -89,6 +90,14 @@ namespace Engine.Data {
 			}
 			modelGeneratedTypeMap = dic;
 
+		}
+
+		public static List<Type> GetGeneratedModelTypes() {
+			return modelGeneratedTypeMap.Values.ToList();
+		}
+
+		public static List<Type> GetModelTypes() {
+			return modelGeneratedTypeMap.Keys.ToList();
 		}
 
 		public static Model FetchOne<Model>(string id, bool bypassState = false) where Model : Data.Model, new() {

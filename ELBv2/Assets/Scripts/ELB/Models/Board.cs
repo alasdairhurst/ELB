@@ -8,4 +8,12 @@ namespace ELB.Models {
 		public Collection<Cell> Cells { get; set; }
 		public float Scale { get; set; }
 	}
+
+	public class FancyBoard : Board { }
+
+	public class OtherBoard : Board { }
+
+	public class Rolling : Landscape { }
+
+	public class EvenFancierBoard : FancyBoard { }
 }
