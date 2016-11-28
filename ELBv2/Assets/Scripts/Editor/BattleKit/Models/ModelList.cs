@@ -48,11 +48,9 @@ public sealed class ModelList : EditorWindow {
 
 	private void OnGUI() {
 		_scrollPos = EditorGUILayout.BeginScrollView(_scrollPos);
-
-		_drawIndex = 0;
-		_idIndexes.Clear();
-
 		DrawChildren(typeof(Model));
+		_idIndexes.Clear();
+		_drawIndex = 0;
 		EditorGUILayout.EndScrollView();
 	}
 	private void StartIndent() {
@@ -66,6 +64,14 @@ public sealed class ModelList : EditorWindow {
 	private int NextId() {
 		_selectedIndex++;
 		return _idIndexes[_selectedIndex];
+	}
+
+	private void SetSelected(int controlID) {
+		_selectedIndex = _idIndexes.FirstOrDefault(x => x.Value == controlID).Key;
+	}
+
+	private void SetIndex(int controlID) {
+		_idIndexes[_drawIndex++] = controlID;
 	}
 
 	private bool HasNext() {
@@ -91,12 +97,12 @@ public sealed class ModelList : EditorWindow {
 
 	private bool ListItem(string text) {
 		var controlID = GUIUtility.GetControlID(FocusType.Keyboard);
+		SetIndex(controlID);
 		var style = this == focusedWindow ? StyleStore.LabelFocus : StyleStore.LabelNoFocus;
 		var itemPosition = GUILayoutUtility.GetRect(EditorGUIUtility.fieldWidth, EditorGUIUtility.fieldWidth, 17f, 17f, style);
 		var e = Event.current;
 		switch (e.type) {
 			case EventType.Repaint:
-				_idIndexes[_drawIndex++] = controlID;
 				style.Draw(itemPosition, GUIContent.none, false, GUIUtility.hotControl == controlID, false,
 				GUIUtility.keyboardControl == controlID);
 				var textPosition = itemPosition;
@@ -109,7 +115,7 @@ public sealed class ModelList : EditorWindow {
 					GUIUtility.hotControl = controlID;
 					GUIUtility.keyboardControl = controlID;
 					Event.current.Use();
-					_selectedIndex = _idIndexes.FirstOrDefault(x => x.Value == controlID).Key;
+					SetSelected(controlID);
 					return true;
 				}
 				return false;
@@ -120,14 +126,16 @@ public sealed class ModelList : EditorWindow {
 				}
 				return false;
 			case EventType.KeyDown:
-				if ((e.keyCode == KeyCode.UpArrow) && HasPrevious() && (controlID == GetPreviousId())) {
+				if (e.keyCode == KeyCode.UpArrow && HasPrevious() && (controlID == GetPreviousId())) {
 					GUIUtility.keyboardControl = PreviousId();
 					Event.current.Use();
+					SetSelected(controlID);
 					return true;
 				}
-				if ((e.keyCode == KeyCode.UpArrow) && HasNext() && (controlID == GetNextId())) {
+				if (e.keyCode == KeyCode.DownArrow && HasNext() && (controlID == GetNextId())) {
 					GUIUtility.keyboardControl = NextId();
 					Event.current.Use();
+					SetSelected(controlID);
 					return true;
 				}
 				return false;
@@ -143,6 +151,7 @@ public sealed class ModelList : EditorWindow {
 		var content = new GUIContent(text);
 		var style = StyleStore.Foldout;
 		var controlID = GUIUtility.GetControlID(FocusType.Keyboard, itemPosition);
+		SetIndex(controlID);
 		var eventType = Event.current.type;
 		if (!GUI.enabled && ((Event.current.rawType == EventType.MouseDown) || (Event.current.rawType == EventType.MouseDrag) || (Event.current.rawType == EventType.MouseUp)))
 			eventType = Event.current.rawType;
@@ -152,7 +161,7 @@ public sealed class ModelList : EditorWindow {
 				if (itemPosition.Contains(Event.current.mousePosition) && (Event.current.button == 0)) {
 					GUIUtility.hotControl = controlID;
 					GUIUtility.keyboardControl = controlID;
-					_selectedIndex = _idIndexes.FirstOrDefault(x => x.Value == controlID).Key;
+					SetSelected(controlID);
 					Event.current.Use();
 					return true;
 				}
@@ -180,23 +189,25 @@ public sealed class ModelList : EditorWindow {
 					Event.current.Use();
 				return false;
 			case EventType.KeyDown:
+				var keyCode = Event.current.keyCode;
 				if (GUIUtility.keyboardControl == controlID) {
-					var keyCode = Event.current.keyCode;
 					if (((keyCode == KeyCode.LeftArrow) && foldout) || ((keyCode == KeyCode.RightArrow) && !foldout)) {
 						GUI.changed = true;
 						Event.current.Use();
 						_foldoutExpanded[text] = !foldout;
-					} else if ((keyCode == KeyCode.UpArrow) && HasPrevious() && (controlID == GetPreviousId())) {
-						GUIUtility.keyboardControl = PreviousId();
-						GUI.changed = true;
-						Event.current.Use();
-						return true;
-					} else if ((keyCode == KeyCode.DownArrow) && HasNext() && (controlID == GetNextId())) {
-						GUIUtility.keyboardControl = NextId();
-						GUI.changed = true;
-						Event.current.Use();
-						return true;
 					}
+				} else if (keyCode == KeyCode.UpArrow && HasPrevious() && (controlID == GetPreviousId())) {
+					GUIUtility.keyboardControl = PreviousId();
+					GUI.changed = true;
+					Event.current.Use();
+					SetSelected(controlID);
+					return true;
+				} else if (keyCode == KeyCode.DownArrow && HasNext() && (controlID == GetNextId())) {
+					GUIUtility.keyboardControl = NextId();
+					GUI.changed = true;
+					Event.current.Use();
+					SetSelected(controlID);
+					return true;
 				}
 				return false;
 			case EventType.Repaint: {
