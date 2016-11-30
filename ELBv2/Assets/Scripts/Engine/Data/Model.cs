@@ -3,7 +3,7 @@ using System;
 
 namespace Engine.Data {
 
-	public abstract class Model : ModelBase {
+	public class Model : ModelBase {
 		
 		public Model() {
 			// generate a guid

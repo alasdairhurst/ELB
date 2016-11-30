@@ -1,7 +1,4 @@
-﻿using Engine.Data;
-
-namespace ELB.Models {
+﻿namespace ELB.Models {
 	public class Unit : Actor {
-	}
-	
+	}	
 }

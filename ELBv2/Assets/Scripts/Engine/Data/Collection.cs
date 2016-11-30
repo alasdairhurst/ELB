@@ -44,14 +44,10 @@ namespace Engine.Data {
 			return true;
 		}
 
-		public void SaveTemp() {
+		public void Save() {
 			foreach (Model m in this) {
 				GameState.Update(m);
 			}
-		}
-
-		public bool Save() {
-			return false;
 		}
 
 		public override string ToString() {

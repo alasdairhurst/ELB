@@ -18,7 +18,14 @@ namespace Engine.Data {
 				model = cache.GetOne(id, model);
 			}
 			if (model == null) {
-				model = connection.Find<Model>(id);
+				try {
+					model = connection.Find<Model>(id);
+				} catch (SQLiteException e) {
+					if (!e.Message.StartsWith("no such table")) {
+						throw;
+					}
+				}
+				
 			}
 			if (model != null) {
 				cache.SetOne(id, model);
@@ -39,11 +46,17 @@ namespace Engine.Data {
 			if (bypassCache || idCount != models.Count) {
 				var diff = ids.Except(models.Select(x => x._Id));
 				if (diff.Count() > 0) {
-					var m = connection.Table<Model>().Where(x => diff.Contains(x._Id));
-					foreach (Model mo in m) {
-						cache.SetOne(mo._Id, mo);
+					try {
+						var m = connection.Table<Model>().Where(x => diff.Contains(x._Id));
+						foreach (Model mo in m) {
+							cache.SetOne(mo._Id, mo);
+						}
+						models.AddRange(m);
+					} catch (SQLiteException e) {
+						if (!e.Message.StartsWith("no such table")) {
+							throw;
+						}
 					}
-					models.AddRange(m);
 				}
 			}
 			return models;
@@ -64,14 +77,21 @@ namespace Engine.Data {
 				models.AddRange(cache.GetAll<Model>());
 			}
 			if (bypassCache || models.Count == 0) {
-				var fetched = connection.Table<Model>();
-				if (fetched.Count() != 0) {
-					cache.Clear();
-					foreach (Model mo in fetched) {
-						cache.SetOne(mo._Id, mo);
+				try {
+					var fetched = connection.Table<Model>();
+					if (fetched.Count() != 0) {
+						cache.Clear();
+						foreach (Model mo in fetched) {
+							cache.SetOne(mo._Id, mo);
+						}
+						models.AddRange(fetched);
 					}
-					models.AddRange(fetched);
+				} catch (SQLiteException e) {
+					if (!e.Message.StartsWith("no such table")) {
+						throw;
+					}
 				}
+				
 			}
 			return models;
 		}

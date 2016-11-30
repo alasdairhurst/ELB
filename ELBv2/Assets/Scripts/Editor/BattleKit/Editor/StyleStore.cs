@@ -8,6 +8,9 @@ public static class StyleStore {
 	public static readonly GUIStyle Foldout = FoldoutStyle();
 	public static readonly GUIStyle LabelFocus = LabelTextureStyle(focusedBackground);
 	public static readonly GUIStyle LabelNoFocus = LabelTextureStyle(unFocusedBackround);
+	public static readonly GUIStyle ToolbarButton = ToolbarButtonStyle();
+	public static readonly GUIStyle TableCell = TableCellStyle();
+	public static readonly GUIStyle Border = BorderStyle();
 
 	private static Texture2D ColourTexture(byte r = 255, byte g = 255, byte b = 255, byte a = 255) {
 		var tex = new Texture2D(1, 1);
@@ -31,8 +34,20 @@ public static class StyleStore {
 		return myFoldoutStyle;
 	}
 
+	private static GUIStyle BorderStyle() {
+		return new GUIStyle {
+			normal = new GUIStyleState {
+				background = unFocusedBackround
+			},
+			onNormal = new GUIStyleState {
+				background = unFocusedBackround
+			},
+			padding = new RectOffset(2,2,2,2)
+		};
+	}
+
 	private static GUIStyle LabelTextureStyle(Texture2D background) {
-		var style = new GUIStyle {
+		return new GUIStyle {
 			active = new GUIStyleState {
 				background = background,
 				textColor = Color.white
@@ -50,6 +65,37 @@ public static class StyleStore {
 				textColor = Color.white
 			},
 			padding = new RectOffset(14, 0, 2, 2)
+		};
+	}
+
+	private static GUIStyle ToolbarButtonStyle() {
+		return new GUIStyle("ToolbarButton") {
+			alignment = TextAnchor.MiddleLeft
+		};
+	}
+
+	private static GUIStyle TableCellStyle() {
+		var style = new GUIStyle {
+			active = new GUIStyleState {
+				textColor = Color.white,
+				background = new Texture2D(0,0)
+			},
+			onActive = new GUIStyleState {
+				textColor = Color.white,
+				background = new Texture2D(0, 0)
+			},
+			focused = new GUIStyleState {
+				textColor = Color.white,
+				background = new Texture2D(0, 0)
+			},
+			onFocused = new GUIStyleState {
+				textColor = Color.white,
+				background = new Texture2D(0,0)
+			},
+			padding = new RectOffset(2,2,2,2),
+			wordWrap = false,
+			clipping = TextClipping.Clip,
+			alignment = TextAnchor.MiddleLeft
 		};
 		return style;
 	}
