@@ -402,10 +402,7 @@ namespace BattleKit.Models {
 		}
 
 		private void New() {
-			ShowEditWindow(new Model(), true);
-			object o = Activator.CreateInstance(_selectedType);
-			(o as Model).Save();
-			_collection.Add(o);
+			ModelWizard.ShowWizard(_selectedType);
 		}
 
 		private void Delete(object instance) {
@@ -414,11 +411,7 @@ namespace BattleKit.Models {
 		}
 
 		private void ShowEditWindow(object instance) {
-			ShowEditWindow(instance, false);
-		}
-
-		private void ShowEditWindow(object instance, bool isNew) {
-
+			ModelWizard.ShowWizard(instance as Model);
 		}
 
 		private bool CanPaste() {
