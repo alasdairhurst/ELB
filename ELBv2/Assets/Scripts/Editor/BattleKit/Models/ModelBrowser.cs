@@ -10,10 +10,10 @@ using System.Reflection;
 using System.Text;
 
 namespace BattleKit.Models {
-	public sealed class ModelList : EditorWindow {
+	public sealed class ModelBrowser : EditorWindow {
 		[MenuItem("BattleKit/Model Browser")]
 		public static void ShowWindow() {
-			GetWindow<ModelList>("Models");
+			GetWindow<ModelBrowser>("Models");
 		}
 
 		private static ILookup<Type, Type> _models;
@@ -61,7 +61,7 @@ namespace BattleKit.Models {
 			}
 		}
 
-		public ModelList() {
+		public ModelBrowser() {
 			if (_models == null)
 				_models = GameState.GetModelTypes().ToLookup(model => model.BaseType, model => model);
 		}
@@ -406,11 +406,17 @@ namespace BattleKit.Models {
 		}
 
 		private void Delete(object instance) {
+			if (instance == null) {
+				return;
+			}
 			(instance as Model).Delete();
 			_collection.Remove(instance);
 		}
 
 		private void ShowEditWindow(object instance) {
+			if (instance == null) {
+				return;
+			}
 			ModelWizard.ShowWizard(instance as Model);
 		}
 
