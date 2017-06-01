@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Reflection;
 using System.Collections;
@@ -155,6 +155,12 @@ namespace Engine.Data {
 		}
 
 		public static Collection<Model> FetchAll<Model>(bool bypassState = false) where Model : Data.Model, new() {
+			Type instanceType;
+			try {
+				instanceType = modelGeneratedTypeMap[typeof(Model)];
+			} catch (Exception) {
+				throw (new Exception("Type " + typeof(Model).ToString() + " not initialised.."));
+			}
 			var genInstance = (ModelDB)Activator.CreateInstance(modelGeneratedTypeMap[typeof(Model)]);
 			var models = new Collection<Model>();
 			if (!bypassState) {
@@ -163,8 +169,7 @@ namespace Engine.Data {
 					if (genInstance.GetType() == m.GetType()) {
 						models.Add(convertToModel<Model>(m));
 					}
-					
-				}		
+				}
 			}
 			if (bypassState || models.Count == 0) {
 				var fetched = (IList)typeof(Database).GetMethod("GetAll")

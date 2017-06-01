@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using Engine.Data;
 using Engine.String;
 using UnityEngine;
 using UnityEditor;
+using BattleKit.Editor;
 
 class CustomFields {
 
@@ -91,11 +92,15 @@ class CustomFields {
 				GUIUtility.keyboardControl = id;
 				if (rect.Contains(Event.current.mousePosition)) {
 					if (GUI.enabled) {
-						//ObjectSelector.get.Show(obj, objType, property, allowSceneObjects);
-						//ObjectSelector.get.objectSelectorID = id;
-						if (EditorUtility.DisplayDialog("find model", "find model", "ok")) {
-							GUIUtility.ExitGUI();
-						}
+						ModelPickerFn cb = delegate (Model m) {
+							EditorUtility.DisplayDialog("it updated", "it updated", "OK");
+						};
+						Action close = delegate ( ) {
+							EditorUtility.DisplayDialog("it closed", "it closed", "OK");
+							GUI.enabled = true;
+						};
+						ModelPicker.ShowWizard(modelType, cb, close);
+						GUI.enabled = false;
 					}
 				}
 				current.Use();
