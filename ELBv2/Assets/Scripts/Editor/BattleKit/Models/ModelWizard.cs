@@ -45,34 +45,35 @@ namespace BattleKit.Editor {
 			_scrollPos = GUILayout.BeginScrollView(_scrollPos);
 			{
 				foreach(var propertyInfo in _props) {
+					object value = null;
+					var currentVal = propertyInfo.GetValue(_selection, null);
 					if(propertyInfo.PropertyType.IsSubclassOf(typeof(Model))) {
-						var currentVal = propertyInfo.GetValue(_selection, null) as Model;
-						var val = CustomFields.ModelField(new GUIContent(propertyInfo.Name), currentVal, propertyInfo.PropertyType, this);
-						if(currentVal != val) {
-							propertyInfo.SetValue(_selection, val, null);
-						}
+						value = CustomFields.ModelField(new GUIContent(propertyInfo.Name), currentVal as Model, propertyInfo.PropertyType, this);
 					} else {
 						switch(propertyInfo.PropertyType.Name) {
 							case "String": {
 									GUI.enabled = propertyInfo.Name != "_Id";
 									// input default values
-									var val = EditorGUILayout.TextField(new GUIContent(propertyInfo.Name), (string)propertyInfo.GetValue(_selection, null));
+									value = EditorGUILayout.TextField(new GUIContent(propertyInfo.Name), (string)propertyInfo.GetValue(_selection, null));
 									GUI.enabled = true;
 
-									propertyInfo.SetValue(_selection, val, null);
 
 									// check for required and duplicates
-									if(val == null || val.Trim() == "" && propertyInfo.Name == "_EditorId") {
+									if(value == null || (value as string).Trim() == "" && propertyInfo.Name == "_EditorId") {
 										enableSave = false;
 									}
 									break;
 								}
 							case "Int32": {
-									EditorGUILayout.IntField(new GUIContent(propertyInfo.Name), (int)propertyInfo.GetValue(_selection, null));
+									value = EditorGUILayout.IntField(new GUIContent(propertyInfo.Name), (int)propertyInfo.GetValue(_selection, null));
 									break;
 								}
 							case "Single": {
-									EditorGUILayout.FloatField(new GUIContent(propertyInfo.Name), (float)propertyInfo.GetValue(_selection, null));
+									value = EditorGUILayout.FloatField(new GUIContent(propertyInfo.Name), (float)propertyInfo.GetValue(_selection, null));
+									break;
+								}
+							case "Boolean": {
+									value = EditorGUILayout.Toggle(new GUIContent(propertyInfo.Name), (bool)propertyInfo.GetValue(_selection, null));
 									break;
 								}
 							default: {
@@ -83,8 +84,10 @@ namespace BattleKit.Editor {
 								}
 						}
 					}
+					if(currentVal != value) {
+						propertyInfo.SetValue(_selection, value, null);
+					}
 				}
-
 
 				GUILayout.BeginHorizontal();
 				{
