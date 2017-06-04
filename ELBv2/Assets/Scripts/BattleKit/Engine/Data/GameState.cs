@@ -193,16 +193,7 @@ namespace BattleKit.Engine {
 			modelFlags[model._Id] = ModelFlag.Modified;
 		}
 
-		private static bool isSubclassOfRawGeneric(Type generic, Type toCheck) {
-			while (toCheck != null && toCheck != typeof(object)) {
-				var cur = toCheck.IsGenericType ? toCheck.GetGenericTypeDefinition() : toCheck;
-				if (generic == cur && cur != toCheck) {
-					return true;
-				}
-				toCheck = toCheck.BaseType;
-			}
-			return false;
-		}
+
 
 		private static M convertToModel<M>(ModelDB genModel) where M : Model, new() {
 			if (typeof(M).Name != genModel.GetType().Name) {
@@ -226,7 +217,7 @@ namespace BattleKit.Engine {
 				// check if prop is a collection or model
 				
 				if ((pi.PropertyType.IsSubclassOf(typeof(Model)) ||
-					isSubclassOfRawGeneric(typeof(Collection<>), pi.PropertyType))
+					Utils.isSubclassOfRawGeneric(typeof(Collection<>), pi.PropertyType))
 					&& value != null) {
 						var instance = Activator.CreateInstance(pi.PropertyType);
 						// call fetch on the collection/model - make sure the method invoked is the one that takes a string
@@ -259,7 +250,7 @@ namespace BattleKit.Engine {
 				// check if prop is a collection or model
 				if (pi.PropertyType.IsSubclassOf(typeof(Model))) {
 					value = ((Model)value)._Id;
-				} else if (isSubclassOfRawGeneric(typeof(Collection<>), pi.PropertyType)) {
+				} else if (Utils.isSubclassOfRawGeneric(typeof(Collection<>), pi.PropertyType)) {
 					value = value.GetType().GetMethod("DBString").Invoke(pi.GetValue(model, null), null);
 				}
 
