@@ -1,6 +1,6 @@
 using System;
 
-namespace BattleKit.Engine {
+namespace BattleKit.Editor {
 	public static class Utils {
 		public static object call(this object o, string methodName, params object[] args) {
 			var mi = o.GetType().GetMethod(methodName, System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
