@@ -3,7 +3,6 @@ using Engine.Data;
 using Engine.String;
 using UnityEngine;
 using UnityEditor;
-using BattleKit.Editor.Utils;
 
 namespace BattleKit.Editor {
 

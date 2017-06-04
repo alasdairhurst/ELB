@@ -1,11 +1,7 @@
 using System;
 using Engine.Data;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEditor;
 using UnityEngine;
-using BattleKit.Editor.Utils;
 
 namespace BattleKit.Editor {
 	class ModelPicker : EditorWindow {
@@ -111,7 +107,6 @@ namespace BattleKit.Editor {
 			if(!closing) {
 				closing = true;
 				Close();
-				GUIUtility.ExitGUI();
 			}
 		}
 
