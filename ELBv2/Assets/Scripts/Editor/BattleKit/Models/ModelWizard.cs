@@ -47,42 +47,46 @@ namespace BattleKit.Editor {
 				foreach(var propertyInfo in _props) {
 					object value = null;
 					var currentVal = propertyInfo.GetValue(_selection, null);
-					if(propertyInfo.PropertyType.IsSubclassOf(typeof(Model))) {
-						value = CustomFields.ModelField(new GUIContent(propertyInfo.Name), currentVal as Model, propertyInfo.PropertyType, this);
-					} else {
-						switch(propertyInfo.PropertyType.Name) {
-							case "String": {
-									GUI.enabled = propertyInfo.Name != "_Id";
-									// input default values
-									value = EditorGUILayout.TextField(new GUIContent(propertyInfo.Name), (string)propertyInfo.GetValue(_selection, null));
-									GUI.enabled = true;
+					switch(propertyInfo.PropertyType.Name) {
+						case "String": {
+								GUI.enabled = propertyInfo.Name != "_Id";
+								// input default values
+								value = EditorGUILayout.TextField(new GUIContent(propertyInfo.Name), (string)propertyInfo.GetValue(_selection, null));
+								GUI.enabled = true;
 
 
-									// check for required and duplicates
-									if(value == null || (value as string).Trim() == "" && propertyInfo.Name == "_EditorId") {
-										enableSave = false;
-									}
-									break;
+								// check for required and duplicates
+								if(value == null || (value as string).Trim() == "" && propertyInfo.Name == "_EditorId") {
+									enableSave = false;
 								}
-							case "Int32": {
-									value = EditorGUILayout.IntField(new GUIContent(propertyInfo.Name), (int)propertyInfo.GetValue(_selection, null));
-									break;
-								}
-							case "Single": {
-									value = EditorGUILayout.FloatField(new GUIContent(propertyInfo.Name), (float)propertyInfo.GetValue(_selection, null));
-									break;
-								}
-							case "Boolean": {
-									value = EditorGUILayout.Toggle(new GUIContent(propertyInfo.Name), (bool)propertyInfo.GetValue(_selection, null));
-									break;
-								}
-							default: {
+								break;
+							}
+						case "Int32": {
+								value = EditorGUILayout.IntField(new GUIContent(propertyInfo.Name), (int)propertyInfo.GetValue(_selection, null));
+								break;
+							}
+						case "Single": {
+								value = EditorGUILayout.FloatField(new GUIContent(propertyInfo.Name), (float)propertyInfo.GetValue(_selection, null));
+								break;
+							}
+						case "Boolean": {
+								value = EditorGUILayout.Toggle(new GUIContent(propertyInfo.Name), (bool)propertyInfo.GetValue(_selection, null));
+								break;
+							}
+						default: {
+								// case "Model"
+								if(propertyInfo.PropertyType.IsSubclassOf(typeof(Model))) {
+									value = CustomFields.ModelField(new GUIContent(propertyInfo.Name), currentVal as Model, propertyInfo.PropertyType, this);
+								// case "enum"
+								} else if(propertyInfo.PropertyType.IsEnum) {
+									value = EditorGUILayout.EnumPopup(new GUIContent(propertyInfo.Name), currentVal as Enum);
+								} else {
 									GUI.enabled = false;
 									EditorGUILayout.TextField(new GUIContent(propertyInfo.Name), "No editor for type: " + propertyInfo.PropertyType.Name);
 									GUI.enabled = true;
-									break;
 								}
-						}
+							}
+							break;
 					}
 					if(currentVal != value) {
 						propertyInfo.SetValue(_selection, value, null);
