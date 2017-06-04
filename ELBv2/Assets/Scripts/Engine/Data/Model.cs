@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using System;
 
-namespace Engine.Data {
+namespace BattleKit.Engine {
 
 	public class Model : ModelBase {
 		

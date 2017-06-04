@@ -1,4 +1,4 @@
-﻿namespace Engine.Data.Config {
+﻿namespace BattleKit.Engine {
 	static class Conf {
 		// SHOULD BE IN CONFIG FILE
 		private static string dbName = "db.s3db";

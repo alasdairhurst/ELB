@@ -1,5 +1,5 @@
 ﻿
-namespace Engine.String {
+namespace BattleKit.Engine {
 	public interface iFancyString {
 		string ToString(StringOpts opts, int tabIndex);
 	}

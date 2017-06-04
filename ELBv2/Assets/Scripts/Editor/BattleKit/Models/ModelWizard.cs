@@ -1,4 +1,4 @@
-using Engine.Data;
+using BattleKit.Engine;
 using System;
 using System.Linq;
 using System.Reflection;
@@ -77,7 +77,10 @@ namespace BattleKit.Editor {
 								// case "Model"
 								if(propertyInfo.PropertyType.IsSubclassOf(typeof(Model))) {
 									value = CustomFields.ModelField(new GUIContent(propertyInfo.Name), currentVal as Model, propertyInfo.PropertyType, this);
-								// case "enum"
+								// case "Collection
+								} else if (Utils.IsSubclassOfRawGeneric(typeof(Collection<>), propertyInfo.PropertyType)) {
+									
+								// case "Enum"
 								} else if(propertyInfo.PropertyType.IsEnum) {
 									value = EditorGUILayout.EnumPopup(new GUIContent(propertyInfo.Name), currentVal as Enum);
 								} else {

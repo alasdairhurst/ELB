@@ -1,8 +1,7 @@
-﻿using Engine.String;
-using SQLite4Unity3d;
+﻿using SQLite4Unity3d;
 using System.Linq;
 
-namespace Engine.Data {
+namespace BattleKit.Engine {
 	public abstract class ModelBase : iFancyString {
 		[PrimaryKey, Unique]
 		public string _Id { get; set; }

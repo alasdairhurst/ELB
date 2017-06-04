@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using System.Collections.Generic;
 
-namespace Engine.Data {
+namespace BattleKit.Engine {
 	public class Cache<K, V> : Dictionary<K, V> {
 
 		private double timeToLive = double.PositiveInfinity;

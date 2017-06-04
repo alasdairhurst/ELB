@@ -1,5 +1,5 @@
-﻿using Engine.Data;
+﻿using BattleKit.Engine;
 
-namespace ELB.Models {
+namespace ELB {
 	public class Actor : Model {}
 }

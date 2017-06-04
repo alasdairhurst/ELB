@@ -1,9 +1,8 @@
 using UnityEngine;
 using UnityEditor;
+using BattleKit.Engine;
 using System;
 using System.Linq;
-using Engine.Data;
-using BattleKit.Editor.Utils;
 using System.Collections;
 using System.Reflection;
 
@@ -86,6 +85,10 @@ namespace BattleKit.Editor {
 		}
 
 		private void OnGUI() {
+			if(_models == null) {
+				return;
+			}
+
 			GUILayout.BeginHorizontal();
 
 			_scrollPos = EditorGUILayout.BeginScrollView(_scrollPos, GUILayout.Width(_listWidth));
@@ -119,7 +122,7 @@ namespace BattleKit.Editor {
 						foreach (var propertyInfo in _props) {
 							var val = propertyInfo.GetValue(instance, null);
 							if(val != null && propertyInfo.PropertyType.IsSubclassOf(typeof(Model))) {
-								val = (val as Model).ToString(Engine.String.StringOpts.Identifier);
+								val = (val as Model).ToString(StringOpts.Identifier);
 							}
 							Table.Cell(val as string);
 						}

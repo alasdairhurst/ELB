@@ -1,4 +1,4 @@
-﻿namespace ELB.Models {
-	public class Unit : Actor {
-	}
+﻿namespace ELB {
+	//public class Unit : Actor {
+	//}
 }

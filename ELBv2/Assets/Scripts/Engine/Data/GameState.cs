@@ -6,9 +6,8 @@ using System.Collections.Generic;
 using System.CodeDom;
 using System.CodeDom.Compiler;
 using Microsoft.CSharp;
-using UnityEngine;
 
-namespace Engine.Data {
+namespace BattleKit.Engine {
 	public static class GameState {
 
 		public enum ModelFlag {
@@ -25,23 +24,27 @@ namespace Engine.Data {
 			db = new Database();
 			modelFlags = new Dictionary<string, ModelFlag>();
 			state = new Cache<string, object>();
-
-			// generate type map
 			var t = typeof(Model);
+			var subclasses = t.Assembly.GetTypes().Where(type => type.IsSubclassOf(t));
+			modelGeneratedTypeMap = new Dictionary<Type, Type>();
+			if(subclasses.Count() == 0) {
+				return;
+			}
+			// generate type map
+
 			var codeNamespace = new CodeNamespace(t.FullName + ".Generated");
 			codeNamespace.Imports.Add(new CodeNamespaceImport("System"));
 
-			var subclasses = t.Assembly.GetTypes().Where(type => type.IsSubclassOf(t));
-			foreach (var c in subclasses) {
+			foreach(var c in subclasses) {
 				var newType = new CodeTypeDeclaration(c.Name) {
 					TypeAttributes = TypeAttributes.Public
 				};
-				newType.BaseTypes.Add("Engine.Data.ModelDB");
+				newType.BaseTypes.Add("BattleKit.Engine.ModelDB");
 
 				PropertyInfo[] properties = c.GetProperties();
-				foreach (PropertyInfo pi in properties) {
+				foreach(PropertyInfo pi in properties) {
 					// ignore the property if it exists in the model base
-					if (typeof(ModelBase).GetProperties().Count(x => x.Name == pi.Name) != 0) {
+					if(typeof(ModelBase).GetProperties().Count(x => x.Name == pi.Name) != 0) {
 						continue;
 					}
 					var snippet = new CodeSnippetTypeMember {
@@ -71,12 +74,12 @@ namespace Engine.Data {
 			var provider = new CSharpCodeProvider();
 			var compilerResults = provider.CompileAssemblyFromDom(compilerParameters, codeCompileUnit);
 
-			if (compilerResults == null) {
+			if(compilerResults == null) {
 				throw new InvalidOperationException("ClassCompiler did not return results.");
 			}
-			if (compilerResults.Errors.HasErrors) {
+			if(compilerResults.Errors.HasErrors) {
 				var errors = string.Empty;
-				foreach (CompilerError compilerError in compilerResults.Errors) {
+				foreach(CompilerError compilerError in compilerResults.Errors) {
 					errors += compilerError.ErrorText + "\n";
 				}
 				throw new InvalidOperationException("Errors while compiling the dynamic classes:\n" + errors);
@@ -84,12 +87,9 @@ namespace Engine.Data {
 
 			var dynamicAssembly = compilerResults.CompiledAssembly;
 			var types = dynamicAssembly.GetExportedTypes();
-			var dic = new Dictionary<Type, Type>();
-			for (int i = 0; i < types.Length; i++) {
-				dic.Add(subclasses.ElementAt(i), types[i]);
+			for(int i = 0; i < types.Length; i++) {
+				modelGeneratedTypeMap.Add(subclasses.ElementAt(i), types[i]);
 			}
-			modelGeneratedTypeMap = dic;
-
 		}
 
 		public static List<Type> GetGeneratedModelTypes() {
@@ -100,7 +100,7 @@ namespace Engine.Data {
 			return modelGeneratedTypeMap.Keys.ToList();
 		}
 
-		public static Model FetchOne<Model>(string id, bool bypassState = false) where Model : Data.Model, new() {
+		public static Model FetchOne<Model>(string id, bool bypassState = false) where Model : Engine.Model, new() {
 			var genInstance = Activator.CreateInstance(modelGeneratedTypeMap[typeof(Model)]);
 			var fetchedModel = genInstance;
 			if (!bypassState) {
@@ -119,7 +119,7 @@ namespace Engine.Data {
 			return convertToModel<Model>((ModelDB)fetchedModel);
 		}
 
-		public static Collection<Model> Fetch<Model>(IEnumerable<string> ids, bool bypassState = false) where Model : Data.Model, new() {
+		public static Collection<Model> Fetch<Model>(IEnumerable<string> ids, bool bypassState = false) where Model : Engine.Model, new() {
 			var genInstance = (ModelDB)Activator.CreateInstance(modelGeneratedTypeMap[typeof(Model)]);
 			var models = new Collection<Model>();
 			int idCount = ids.Count();
@@ -154,7 +154,7 @@ namespace Engine.Data {
 			return models;
 		}
 
-		public static Collection<Model> FetchAll<Model>(bool bypassState = false) where Model : Data.Model, new() {
+		public static Collection<Model> FetchAll<Model>(bool bypassState = false) where Model : Engine.Model, new() {
 			Type instanceType;
 			try {
 				instanceType = modelGeneratedTypeMap[typeof(Model)];
@@ -188,25 +188,14 @@ namespace Engine.Data {
 			return models;
 		}
 
-		public static void Update<Model>(Model model) where Model : Data.Model, new() {
+		public static void Update<Model>(Model model) where Model : Engine.Model, new() {
 			var compressedModel = convertToGenModel(model);
 			// set the model
 			state.SetOne(model._Id, compressedModel);
 			modelFlags[model._Id] = ModelFlag.Modified;
 		}
 
-		private static bool isSubclassOfRawGeneric(Type generic, Type toCheck) {
-			while (toCheck != null && toCheck != typeof(object)) {
-				var cur = toCheck.IsGenericType ? toCheck.GetGenericTypeDefinition() : toCheck;
-				if (generic == cur && cur != toCheck) {
-					return true;
-				}
-				toCheck = toCheck.BaseType;
-			}
-			return false;
-		}
-
-		private static Model convertToModel<Model>(ModelDB genModel) where Model : Data.Model, new() {
+		private static Model convertToModel<Model>(ModelDB genModel) where Model : Engine.Model, new() {
 			if (typeof(Model).Name != genModel.GetType().Name) {
 				throw new Exception(string.Format("Trying to convert {0} to {1}", genModel.GetType().FullName, typeof(Model).FullName));
 			}
@@ -227,8 +216,8 @@ namespace Engine.Data {
 				object value = sp.GetValue(genModel, null);
 				// check if prop is a collection or model
 				
-				if ((pi.PropertyType.IsSubclassOf(typeof(Data.Model)) ||
-					isSubclassOfRawGeneric(typeof(Collection<>), pi.PropertyType))
+				if ((pi.PropertyType.IsSubclassOf(typeof(Engine.Model)) ||
+					Utils.IsSubclassOfRawGeneric(typeof(Collection<>), pi.PropertyType))
 					&& value != null) {
 						var instance = Activator.CreateInstance(pi.PropertyType);
 						// call fetch on the collection/model - make sure the method invoked is the one that takes a string
@@ -245,7 +234,7 @@ namespace Engine.Data {
 			return (Model)model;
 		}
 
-		private static ModelDB convertToGenModel(Data.Model model) {
+		private static ModelDB convertToGenModel(Engine.Model model) {
 			var stateModelType = modelGeneratedTypeMap[model.GetType()];
 			var genModel = Activator.CreateInstance(stateModelType);
 			PropertyInfo[] modelProperties = model.GetType().GetProperties();
@@ -259,9 +248,9 @@ namespace Engine.Data {
 				object value = pi.GetValue(model, null);
 
 				// check if prop is a collection or model
-				if (pi.PropertyType.IsSubclassOf(typeof(Data.Model))) {
+				if (pi.PropertyType.IsSubclassOf(typeof(Engine.Model))) {
 					value = ((Model)value)._Id;
-				} else if (isSubclassOfRawGeneric(typeof(Collection<>), pi.PropertyType)) {
+				} else if (Utils.IsSubclassOfRawGeneric(typeof(Collection<>), pi.PropertyType)) {
 					value = value.GetType().GetMethod("DBString").Invoke(pi.GetValue(model, null), null);
 				}
 

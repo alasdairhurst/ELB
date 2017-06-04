@@ -1,9 +1,8 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
-using Engine.String;
 
-namespace Engine.Data {
-	public class Collection<Model> : List<Model>, iFancyString where Model : Data.Model, new() {
+namespace BattleKit.Engine {
+	public class Collection<Model> : List<Model>, iFancyString where Model : Engine.Model, new() {
 
 		public Collection() {
 		}

@@ -1,7 +1,7 @@
-using Engine.Data;
+using BattleKit.Engine;
 
-namespace ELB.Models {
-	public class Cell : Model {
+namespace ELB {
+	/*public class Cell : Model {
 		public int Size { get; set; }
 		public float Height { get; set; }
 		public Landscape Landscape { get; set; }
@@ -11,5 +11,5 @@ namespace ELB.Models {
 		public string[] Commanders { get; set; }
 		public Collection<Unit> Prisoners { get; set; }
 		public Collection<Unit> Defenders { get; set; }
-	}
+	}*/
 }

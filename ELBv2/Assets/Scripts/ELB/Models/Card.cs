@@ -1,6 +1,5 @@
-﻿using Engine.Data;
+﻿using BattleKit.Engine;
 
-namespace ELB.Models {
-	class Card : Model {
-	}
+namespace ELB {
+	//class Card : Model {}
 }
