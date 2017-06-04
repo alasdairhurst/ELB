@@ -1,8 +1,7 @@
 using System;
-using Engine.Data;
 using UnityEditor;
 using UnityEngine;
-
+using BattleKit.Engine;
 namespace BattleKit.Editor {
 	class ModelPicker : EditorWindow {
 

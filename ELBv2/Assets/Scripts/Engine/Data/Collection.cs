@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Engine.String;
 
-namespace Engine.Data {
-	public class Collection<Model> : List<Model>, iFancyString where Model : Data.Model, new() {
+namespace BattleKit.Engine {
+	public class Collection<M> : List<M>, iFancyString where M : Model, new() {
 
 		public Collection() {
 		}
@@ -17,7 +16,7 @@ namespace Engine.Data {
 		}
 
 		public bool Fetch(IEnumerable<string> ids) {
-			List<Model> models = GameState.Fetch<Model>(ids);
+			List<M> models = GameState.Fetch<M>(ids);
 			if (models.Count != ids.Count()) {
 				return false;
 			}
@@ -40,12 +39,12 @@ namespace Engine.Data {
 		// Fetch all models of this type from the cache or database
 		public bool FetchAll() {
 			Clear();
-			AddRange(GameState.FetchAll<Model>());
+			AddRange(GameState.FetchAll<M>());
 			return true;
 		}
 
 		public void Save() {
-			foreach (Model m in this) {
+			foreach (M m in this) {
 				GameState.Update(m);
 			}
 		}

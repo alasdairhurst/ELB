@@ -2,9 +2,9 @@ using UnityEngine;
 using UnityEditor;
 using System;
 using System.Linq;
-using Engine.Data;
 using System.Collections;
 using System.Reflection;
+using BattleKit.Engine;
 
 namespace BattleKit.Editor {
 	public sealed class ModelBrowser : EditorWindow {
@@ -118,7 +118,7 @@ namespace BattleKit.Editor {
 						foreach (var propertyInfo in _props) {
 							var val = propertyInfo.GetValue(instance, null);
 							if(val != null && propertyInfo.PropertyType.IsSubclassOf(typeof(Model))) {
-								val = (val as Model).ToString(Engine.String.StringOpts.Identifier);
+								val = (val as Model).ToString(Engine.StringOpts.Identifier);
 							}
 							Table.Cell(val as string);
 						}

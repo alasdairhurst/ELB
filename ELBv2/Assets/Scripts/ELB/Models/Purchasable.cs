@@ -1,4 +1,4 @@
-﻿using Engine.Data;
+using BattleKit.Engine;
 namespace ELB.Models {
 	public class Purchasable : Model {
 		public string Name { get; set; }

@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using System.Collections.Generic;
 
-namespace Engine.Data {
+namespace BattleKit.Engine {
 	public class Cache<K, V> : Dictionary<K, V> {
 
 		private double timeToLive = double.PositiveInfinity;
@@ -43,7 +43,7 @@ namespace Engine.Data {
 			if (!(value is T)) {
 				throw new System.Exception("Key does not correspond to specified value type");
 			}
-			return (T)(object)value;
+			return (T)value;
 			
 		}
 

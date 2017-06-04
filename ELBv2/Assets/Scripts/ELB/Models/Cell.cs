@@ -1,5 +1,4 @@
-using Engine.Data;
-
+using BattleKit.Engine;
 namespace ELB.Models {
 	public class Cell : Model {
 		public int Size { get; set; }

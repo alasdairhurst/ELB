@@ -1,3 +1,3 @@
-﻿namespace Engine.Data {
+﻿namespace BattleKit.Engine {
 	public class ModelDB : ModelBase {}
 }

@@ -6,9 +6,7 @@ using System.Collections.Generic;
 using System.CodeDom;
 using System.CodeDom.Compiler;
 using Microsoft.CSharp;
-using UnityEngine;
-
-namespace Engine.Data {
+namespace BattleKit.Engine {
 	public static class GameState {
 
 		public enum ModelFlag {
@@ -28,7 +26,7 @@ namespace Engine.Data {
 
 			// generate type map
 			var t = typeof(Model);
-			var codeNamespace = new CodeNamespace(t.FullName + ".Generated");
+			var codeNamespace = new CodeNamespace("Engine.DB");
 			codeNamespace.Imports.Add(new CodeNamespaceImport("System"));
 
 			var subclasses = t.Assembly.GetTypes().Where(type => type.IsSubclassOf(t));
@@ -36,7 +34,7 @@ namespace Engine.Data {
 				var newType = new CodeTypeDeclaration(c.Name) {
 					TypeAttributes = TypeAttributes.Public
 				};
-				newType.BaseTypes.Add("Engine.Data.ModelDB");
+				newType.BaseTypes.Add("BattleKit.Engine.ModelDB");
 
 				PropertyInfo[] properties = c.GetProperties();
 				foreach (PropertyInfo pi in properties) {
@@ -100,7 +98,7 @@ namespace Engine.Data {
 			return modelGeneratedTypeMap.Keys.ToList();
 		}
 
-		public static Model FetchOne<Model>(string id, bool bypassState = false) where Model : Data.Model, new() {
+		public static M FetchOne<M>(string id, bool bypassState = false) where M : Model, new() {
 			var genInstance = Activator.CreateInstance(modelGeneratedTypeMap[typeof(Model)]);
 			var fetchedModel = genInstance;
 			if (!bypassState) {
@@ -116,12 +114,12 @@ namespace Engine.Data {
 				state.SetOne(id, fetchedModel);
 				modelFlags[id] = ModelFlag.LoadedFromDB;
 			}
-			return convertToModel<Model>((ModelDB)fetchedModel);
+			return convertToModel<M>((ModelDB)fetchedModel);
 		}
 
-		public static Collection<Model> Fetch<Model>(IEnumerable<string> ids, bool bypassState = false) where Model : Data.Model, new() {
-			var genInstance = (ModelDB)Activator.CreateInstance(modelGeneratedTypeMap[typeof(Model)]);
-			var models = new Collection<Model>();
+		public static Collection<M> Fetch<M>(IEnumerable<string> ids, bool bypassState = false) where M : Model, new() {
+			var genInstance = (ModelDB)Activator.CreateInstance(modelGeneratedTypeMap[typeof(M)]);
+			var models = new Collection<M>();
 			int idCount = ids.Count();
 			if (idCount == 0) {
 				return models;
@@ -149,25 +147,25 @@ namespace Engine.Data {
 				}
 			}
 			foreach(ModelDB m in genModels) {
-				models.Add(convertToModel<Model>(m));
+				models.Add(convertToModel<M>(m));
 			}
 			return models;
 		}
 
-		public static Collection<Model> FetchAll<Model>(bool bypassState = false) where Model : Data.Model, new() {
+		public static Collection<M> FetchAll<M>(bool bypassState = false) where M : Model, new() {
 			Type instanceType;
 			try {
-				instanceType = modelGeneratedTypeMap[typeof(Model)];
+				instanceType = modelGeneratedTypeMap[typeof(M)];
 			} catch (Exception) {
-				throw (new Exception("Type " + typeof(Model).ToString() + " not initialised.."));
+				throw (new Exception("Type " + typeof(M).ToString() + " not initialised.."));
 			}
-			var genInstance = (ModelDB)Activator.CreateInstance(modelGeneratedTypeMap[typeof(Model)]);
-			var models = new Collection<Model>();
+			var genInstance = (ModelDB)Activator.CreateInstance(instanceType);
+			var models = new Collection<M>();
 			if (!bypassState) {
 				var fetched = state.GetAll(genInstance);
 				foreach (var m in fetched) {
 					if (genInstance.GetType() == m.GetType()) {
-						models.Add(convertToModel<Model>(m));
+						models.Add(convertToModel<M>(m));
 					}
 				}
 			}
@@ -179,16 +177,16 @@ namespace Engine.Data {
 					if (!state.ContainsKey(mo._Id)) {
 						state.SetOne(mo._Id, mo);
 						modelFlags[mo._Id] = ModelFlag.LoadedFromDB;
-						models.Add(convertToModel<Model>(mo));
+						models.Add(convertToModel<M>(mo));
 					} else {
-						models.Add(convertToModel<Model>((ModelDB)state[mo._Id]));
+						models.Add(convertToModel<M>((ModelDB)state[mo._Id]));
 					}
 				}
 			}
 			return models;
 		}
 
-		public static void Update<Model>(Model model) where Model : Data.Model, new() {
+		public static void Update<M>(M model) where M : Model, new() {
 			var compressedModel = convertToGenModel(model);
 			// set the model
 			state.SetOne(model._Id, compressedModel);
@@ -206,12 +204,12 @@ namespace Engine.Data {
 			return false;
 		}
 
-		private static Model convertToModel<Model>(ModelDB genModel) where Model : Data.Model, new() {
-			if (typeof(Model).Name != genModel.GetType().Name) {
-				throw new Exception(string.Format("Trying to convert {0} to {1}", genModel.GetType().FullName, typeof(Model).FullName));
+		private static M convertToModel<M>(ModelDB genModel) where M : Model, new() {
+			if (typeof(M).Name != genModel.GetType().Name) {
+				throw new Exception(string.Format("Trying to convert {0} to {1}", genModel.GetType().FullName, typeof(M).FullName));
 			}
 			
-			var model = Activator.CreateInstance(typeof(Model));
+			var model = Activator.CreateInstance(typeof(M));
 			PropertyInfo[] stateModelProperties = genModel.GetType().GetProperties();
 			PropertyInfo[] modelProperties = model.GetType().GetProperties();
 
@@ -227,7 +225,7 @@ namespace Engine.Data {
 				object value = sp.GetValue(genModel, null);
 				// check if prop is a collection or model
 				
-				if ((pi.PropertyType.IsSubclassOf(typeof(Data.Model)) ||
+				if ((pi.PropertyType.IsSubclassOf(typeof(Model)) ||
 					isSubclassOfRawGeneric(typeof(Collection<>), pi.PropertyType))
 					&& value != null) {
 						var instance = Activator.CreateInstance(pi.PropertyType);
@@ -242,10 +240,10 @@ namespace Engine.Data {
 				// write value
 				pi.SetValue(model, value, null);
 			}
-			return (Model)model;
+			return (M)model;
 		}
 
-		private static ModelDB convertToGenModel(Data.Model model) {
+		private static ModelDB convertToGenModel(Model model) {
 			var stateModelType = modelGeneratedTypeMap[model.GetType()];
 			var genModel = Activator.CreateInstance(stateModelType);
 			PropertyInfo[] modelProperties = model.GetType().GetProperties();
@@ -259,7 +257,7 @@ namespace Engine.Data {
 				object value = pi.GetValue(model, null);
 
 				// check if prop is a collection or model
-				if (pi.PropertyType.IsSubclassOf(typeof(Data.Model))) {
+				if (pi.PropertyType.IsSubclassOf(typeof(Model))) {
 					value = ((Model)value)._Id;
 				} else if (isSubclassOfRawGeneric(typeof(Collection<>), pi.PropertyType)) {
 					value = value.GetType().GetMethod("DBString").Invoke(pi.GetValue(model, null), null);
