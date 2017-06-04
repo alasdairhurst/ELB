@@ -21,6 +21,14 @@ namespace BattleKit.Editor {
 
 		private static readonly int s_ModelFieldHash = "s_ModelFieldHash".GetHashCode();
 
+		private static void showModelPicker(Model model, Type modelType, EditorWindow caller) {
+			if(model != null) {
+				ModelPicker.ShowWizard(model, caller);
+			} else {
+				ModelPicker.ShowWizard(modelType, caller);
+			}
+		}
+
 		public static Model ModelField(GUIContent label, Model model, Type modelType, EditorWindow caller, params GUILayoutOption[] options) {
 			Model selection = model;
 
@@ -43,16 +51,18 @@ namespace BattleKit.Editor {
 			switch(eventType2) {
 				case EventType.KeyDown:
 					if(GUIUtility.keyboardControl == id) {
-						if(current.keyCode == KeyCode.Backspace || current.keyCode == KeyCode.Delete) {
-							model = null;
-							GUI.changed = true;
-							current.Use();
-						}
-						if(current.keyCode == KeyCode.Return) {
-							if(EditorUtility.DisplayDialog("find model", "find model", "OK")) {
-								GUIUtility.ExitGUI();
-							}
-							current.Use();
+						switch (current.keyCode) {
+							case KeyCode.Backspace:
+							case KeyCode.Delete:
+								model = null;
+								GUI.changed = true;
+								current.Use();
+								break;
+							case KeyCode.Return:
+							case KeyCode.KeypadEnter:
+								showModelPicker(model, modelType, caller);
+								break;
+
 						}
 					}
 					goto IL_67D;
@@ -100,17 +110,10 @@ namespace BattleKit.Editor {
 				if(GUI.enabled) {
 					GUIUtility.keyboardControl = id;
 					if(rect.Contains(Event.current.mousePosition)) {
-						if(GUI.enabled) {
-							if(model != null) {
-								ModelPicker.ShowWizard(model, caller);
-							} else {
-								ModelPicker.ShowWizard(modelType, caller);
-							}
-						}
+						showModelPicker(model, modelType, caller);
 					}
 					current.Use();
 				}
-
 			}
 			IL_67D:
 			EditorGUIUtility.SetIconSize(iconSize);

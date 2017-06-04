@@ -101,6 +101,8 @@ namespace BattleKit.Editor {
 		}
 
 		private void OnDestroy( ) {
+			// this is called by the window when you press esc as well as onLostFocus so we want to make sure close isn't called again 
+			closing = true;
 			SendEvent("ModelPickerClosed");
 			instance = null;
 		}
@@ -109,6 +111,7 @@ namespace BattleKit.Editor {
 			if(!closing) {
 				closing = true;
 				Close();
+				GUIUtility.ExitGUI();
 			}
 		}
 
