@@ -1,6 +1,6 @@
 using System;
 
-namespace BattleKit.Editor.Utils {
+namespace BattleKit.Editor {
 
 	public static class DoNotDoThisAtHomeKids {
 		public static object call(this object o, string methodName, params object[] args) {
