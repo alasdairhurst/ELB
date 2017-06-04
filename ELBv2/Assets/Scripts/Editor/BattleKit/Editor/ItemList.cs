@@ -73,9 +73,18 @@ namespace BattleKit.Editor {
 			_idIndexes.Clear();
 		}
 
-		public bool FoldoutGroup(string text) {
+
+		public enum SelectionType {
+			None,
+			Select,
+			ContextSelect,
+			Focus,
+			Delete,
+		}
+
+		public SelectionType FoldoutGroup(string text) {
 			if(_indentIDStack.Count != 0 && !_foldoutExpanded[_indentIDStack.Peek()]) {
-				return false;
+				return SelectionType.None;
 			}
 			_indentIDStack.Push(text);
 			return foldoutItem(text);
@@ -85,62 +94,107 @@ namespace BattleKit.Editor {
 			_indentIDStack.Pop();
 		}
 
-		public bool ListItem(string text) {
+
+		public SelectionType ListItem(string text, bool something = true) {
 			if(_indentIDStack.Count != 0 && !_foldoutExpanded[_indentIDStack.Peek()]) {
-				return false;
+				return SelectionType.None;
 			}
 			return listItem(text);
 		}
 
-		private bool listItem(string text) {
+		public void SetFocus(bool hasFocus) {
+			_hasFocus = hasFocus;
+		}
+
+		private SelectionType listItem(string text) {
 			var controlID = GUIUtility.GetControlID(FocusType.Keyboard);
 			SetIndex(controlID, text);
 			var style = _hasFocus ? StyleStore.LabelFocus : StyleStore.LabelNoFocus;
-			var itemPosition = GUILayoutUtility.GetRect(EditorGUIUtility.fieldWidth, EditorGUIUtility.fieldWidth, 17f, 17f,
+			var rect = GUILayoutUtility.GetRect(EditorGUIUtility.fieldWidth, EditorGUIUtility.fieldWidth, 17f, 17f,
 				style);
 			var e = Event.current;
 			var selected = _keyboardControl == controlID;
+			SelectionType st = selected  && _hasFocus ? SelectionType.Focus : SelectionType.None;
 			switch(e.type) {
 				case EventType.Repaint:
-					style.Draw(itemPosition, GUIContent.none, false, GUIUtility.hotControl == controlID, false,
+					style.Draw(rect, GUIContent.none, false, GUIUtility.hotControl == controlID, false,
 						selected);
-					var textPosition = itemPosition;
+					var textPosition = rect;
 					textPosition.x = INDENT_WIDTH * _indentIDStack.Count;
 					style.Draw(textPosition, new GUIContent(text), false, GUIUtility.hotControl == controlID, false,
 						selected);
 					break;
+				case EventType.ContextClick:
+					if(rect.Contains(e.mousePosition) && _keyboardControl == controlID) {
+						e.Use();
+						st = SelectionType.ContextSelect;
+					}
+					break;
 				case EventType.MouseDown:
-					if((e.button == 0) && itemPosition.Contains(e.mousePosition)) {
-						_hasFocus = true;
-						GUIUtility.hotControl = controlID;
-						_keyboardControl = controlID;
-						Event.current.Use();
-						SetSelected(controlID);
+					if((e.button == 0) && rect.Contains(e.mousePosition)) {
+						switch(Event.current.clickCount) {
+							case 1:
+								_hasFocus = true;
+								GUIUtility.hotControl = controlID;
+								_keyboardControl = controlID;
+								e.Use();
+								SetSelected(controlID);
+								st = SelectionType.Focus;
+								break;
+							case 2:
+								e.Use();
+								st = SelectionType.Select;
+								break;
+						}
 					}
 					break;
 				case EventType.MouseUp:
 					if((e.button == 0) && (GUIUtility.hotControl == controlID)) {
 						GUIUtility.hotControl = 0;
-						Event.current.Use();
+						e.Use();
 					}
 					break;
 				case EventType.KeyDown:
-					if(_hasFocus && e.keyCode == KeyCode.UpArrow && HasPrevious() && (controlID == GetPreviousId())) {
-						_keyboardControl = PreviousId();
-						Event.current.Use();
-						//SetSelected(controlID);
+					if (!_hasFocus) {
+						break;
 					}
-					if(_hasFocus && e.keyCode == KeyCode.DownArrow && HasNext() && (controlID == GetNextId())) {
-						_keyboardControl = NextId();
-						Event.current.Use();
-						//SetSelected(controlID);
+					switch (e.keyCode) {
+						case KeyCode.UpArrow: {
+							if (HasPrevious() && controlID == GetPreviousId()) {
+									_keyboardControl = PreviousId();
+								e.Use();
+							}
+							break;
+						}
+						case KeyCode.DownArrow: {
+							if(HasNext() && controlID == GetNextId()) {
+								_keyboardControl = NextId();
+								e.Use();
+							}
+							break;
+						}
+						case KeyCode.KeypadEnter:
+						case KeyCode.Return: {
+							if (_keyboardControl == controlID) {
+								e.Use();
+								st = SelectionType.Select;
+							}
+							break;
+						}
+						case KeyCode.Delete: {
+							if(_keyboardControl == controlID) {
+								e.Use();
+								return SelectionType.Delete;
+							}
+							break;
+						}
 					}
 					break;
 			}
-			return _keyboardControl == controlID;
+			return st;
 		}
 
-		private bool foldoutItem(string text) {
+		private SelectionType foldoutItem(string text) {
 			if(!_foldoutExpanded.ContainsKey(text))
 				_foldoutExpanded[text] = true;
 			var foldout = _foldoutExpanded[text];
@@ -151,6 +205,8 @@ namespace BattleKit.Editor {
 			var controlID = GUIUtility.GetControlID(FocusType.Keyboard, itemPosition);
 			SetIndex(controlID, text);
 			var eventType = Event.current.type;
+			var selected = _keyboardControl == controlID;
+			SelectionType st = selected && _hasFocus ? SelectionType.Focus : SelectionType.None;
 			if(!GUI.enabled &&
 				((Event.current.rawType == EventType.MouseDown) || (Event.current.rawType == EventType.MouseDrag) ||
 				 (Event.current.rawType == EventType.MouseUp)))
@@ -230,7 +286,7 @@ namespace BattleKit.Editor {
 					}
 					break;
 			}
-			return _keyboardControl == controlID;
+			return st;
 		}
 	}
 

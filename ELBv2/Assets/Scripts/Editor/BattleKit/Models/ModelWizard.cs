@@ -47,7 +47,7 @@ namespace BattleKit.Editor {
 				foreach(var propertyInfo in _props) {
 					if(propertyInfo.PropertyType.IsSubclassOf(typeof(Model))) {
 						var currentVal = propertyInfo.GetValue(_selection, null) as Model;
-						var val = CustomFields.ModelField(new GUIContent(propertyInfo.Name), currentVal, propertyInfo.PropertyType);
+						var val = CustomFields.ModelField(new GUIContent(propertyInfo.Name), currentVal, propertyInfo.PropertyType, this);
 						if(currentVal != val) {
 							propertyInfo.SetValue(_selection, val, null);
 						}

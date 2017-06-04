@@ -58,19 +58,32 @@ namespace BattleKit.Editor {
 		private void DrawChildren(Type t) {
 			foreach(var child in _models[t]) {
 				if(_models[child].Any()) {
-					if(_itemList.FoldoutGroup(child.Name)) {
-						_selectedType = child;
-					}
+					ListItem(child, true);
 					{
 						DrawChildren(child);
 					}
 					_itemList.EndFoldoutGroup();
-				} else if(_itemList.ListItem(child.Name)) {
-					_selectedType = child;
+				} else {
+					ListItem(child);
 				}
 			}
 		}
- 
+
+		private void ListItem(Type t, bool isFoldout = false) {
+			var title = t.Name;
+			ItemList.SelectionType st;
+			if(isFoldout) {
+				st = _itemList.FoldoutGroup(title);
+			} else {
+				st = _itemList.ListItem(title, true);
+			}
+			switch(st) {
+				case ItemList.SelectionType.Focus:
+					_listHasFocus = true;
+					_selectedType = t;
+					break;
+			}
+		}
 
 		private void OnGUI() {
 			GUILayout.BeginHorizontal();
@@ -80,13 +93,14 @@ namespace BattleKit.Editor {
 				if(Event.current.isMouse) {
 					_listHasFocus = true;
 				}
+				_itemList.SetFocus(_listHasFocus);
 				_itemList.Start();
 					DrawChildren(typeof(Model));
 				_itemList.End();
 			}
 			EditorGUILayout.EndScrollView();
 
-			_listWidth = Controls.ResizeControl(position.height, _listWidth);
+			_listWidth += Controls.ResizeControl(position.height, _listWidth);
 
 			if (_selectedType == null) {
 				GUILayout.EndHorizontal();

@@ -14,18 +14,18 @@ namespace BattleKit.Editor {
 			base.Start();
 		}
 
-		public bool FoldoutGroup(string title, bool doFilter = true) {
+		public SelectionType FoldoutGroup(string title, bool doFilter = true) {
 			if(!doFilter || filter(title)) {
 				return base.FoldoutGroup(title);
 			}
-			return false;
+			return SelectionType.None;
 		}
 
-		public bool ListItem(string title, bool doFilter = true) {
+		public SelectionType ListItem(string title, bool doFilter = true, bool doSomething = true) {
 			if(!doFilter || filter(title)) {
-				return base.ListItem(title);
+				return base.ListItem(title, doSomething);
 			}
-			return false;
+			return SelectionType.None;
 		}
 	}
 

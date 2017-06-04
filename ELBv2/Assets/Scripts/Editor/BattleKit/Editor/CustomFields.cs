@@ -9,7 +9,7 @@ namespace BattleKit.Editor {
 
 	public class CustomFields {
 
-		static int s_SearchFieldHash = "EditorSearchField".GetHashCode();
+		//static int s_SearchFieldHash = "EditorSearchField".GetHashCode();
 
 		public static string SearchField(string text) {
 			Rect pos = GUILayoutUtility.GetRect(EditorGUIUtility.fieldWidth, 28f);
@@ -21,12 +21,12 @@ namespace BattleKit.Editor {
 
 		private static readonly int s_ModelFieldHash = "s_ModelFieldHash".GetHashCode();
 
-		public static Model ModelField(GUIContent label, Model model, Type modelType, params GUILayoutOption[] options) {
+		public static Model ModelField(GUIContent label, Model model, Type modelType, EditorWindow caller, params GUILayoutOption[] options) {
 			Model selection = model;
 
 			Rect position = EditorGUILayout.GetControlRect(true, 16f, options);
 
-			int id = GUIUtility.GetControlID(s_ModelFieldHash, EditorGUIUtility.native, position);
+			int id = GUIUtility.GetControlID(s_ModelFieldHash, FocusType.Passive, position);
 
 			EditorGUI.PrefixLabel(position, id, label);
 
@@ -76,6 +76,8 @@ namespace BattleKit.Editor {
 							GUI.changed = true;
 							current.Use();
 							selection = ModelPicker.instance.GetSelection();
+						} else if (current.commandName == "ModelPickerClosed") {
+							caller.Focus();
 						}
 						break;
 					}
@@ -100,9 +102,9 @@ namespace BattleKit.Editor {
 					if(rect.Contains(Event.current.mousePosition)) {
 						if(GUI.enabled) {
 							if(model != null) {
-								ModelPicker.ShowWizard(model, EditorWindow.focusedWindow);
+								ModelPicker.ShowWizard(model, caller);
 							} else {
-								ModelPicker.ShowWizard(modelType, EditorWindow.focusedWindow);
+								ModelPicker.ShowWizard(modelType, caller);
 							}
 						}
 					}

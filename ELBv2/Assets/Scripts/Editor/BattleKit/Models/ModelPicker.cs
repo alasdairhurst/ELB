@@ -15,6 +15,7 @@ namespace BattleKit.Editor {
 		private Vector2 _scrollPos;	 
 		private SearchableItemList _list = new SearchableItemList();
 		private EditorWindow m_DelegateView;
+		private bool closing = false;
 
 		public static ModelPicker instance;
 
@@ -77,16 +78,26 @@ namespace BattleKit.Editor {
 
 			_list.Start();
 			{
-				if(_list.ListItem("None", false)) {
-					setSelection(null);
-				}
+				ListItem(null);
 				for (int i = 0; i < _models.Length; ++i) {
-					if(_list.ListItem(_models[i]._EditorId)) {
-						setSelection(_models[i]);
-					}
+					ListItem(_models[i]);
 				}
 			}
 			_list.End();
+		}
+
+		private void ListItem(Model m, bool filter = true) {
+			var title = m == null ? "None" : m._EditorId;
+			var st = _list.ListItem(title, filter, true);
+			switch(st) {
+				case ItemList.SelectionType.Focus:
+					setSelection(m);
+					break;
+				case ItemList.SelectionType.Select: {
+					closeWindow();
+					break;
+				}
+			}
 		}
 
 		private void OnDestroy( ) {
@@ -94,8 +105,15 @@ namespace BattleKit.Editor {
 			instance = null;
 		}
 
+		void closeWindow() {
+			if(!closing) {
+				closing = true;
+				Close();
+			}
+		}
+
 		void OnLostFocus( ) {
-			Close();
+			closeWindow();
 		}
 	}
 }

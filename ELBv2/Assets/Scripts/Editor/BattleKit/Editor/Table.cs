@@ -1,4 +1,4 @@
-﻿using UnityEditor;
+using UnityEditor;
 using UnityEngine;
 
 namespace BattleKit.Editor {
@@ -19,7 +19,6 @@ namespace BattleKit.Editor {
 	static class Table {
 		private const int RESIZE_HANDLE_SIZE = 4;
 		private const int LEFT_PADDING = 6;
-		private const float DOUBLE_CLICK_TIME = 10;
 		private static TableHeader[] _headers;
 		private static int _selectedRowIndex;
 		private static int _drawIndexCol;
@@ -63,8 +62,10 @@ namespace BattleKit.Editor {
 			_drawIndexCol = 0;
 
 			var controlID = GUIUtility.GetControlID(FocusType.Keyboard);
+			var st = SelectionType.None;
 			if (_selectedRowIndex == _drawIndexRow && _hasFocus) {
 				GUIUtility.keyboardControl = controlID;
+				st = SelectionType.Focus;
 			}
 			var e = Event.current;
 			switch (e.type) {
@@ -73,6 +74,7 @@ namespace BattleKit.Editor {
 					style.Draw(rect, GUIContent.none, false, false, false, _drawIndexRow == _selectedRowIndex);
 					break;
 				case EventType.MouseDown: {
+					bool stSet = false;
 					if (rect.Contains(e.mousePosition)) {
 						switch (Event.current.clickCount) {
 							case 1:
@@ -83,10 +85,15 @@ namespace BattleKit.Editor {
 								break;
 							case 2:
 								e.Use();
-								return SelectionType.Select;
+								st = SelectionType.Select;
+								stSet = true;
+								break;
 						}
 					}
-					return SelectionType.Focus;
+					if (!stSet) {
+						st = SelectionType.Focus;
+					}
+					break;
 				}
 				case EventType.MouseUp: {
 					if (e.button == 0 && GUIUtility.hotControl == controlID) {
@@ -98,9 +105,11 @@ namespace BattleKit.Editor {
 				case EventType.ContextClick:
 					if (rect.Contains(e.mousePosition) && GUIUtility.keyboardControl == controlID) {
 						e.Use();
-						return SelectionType.ContextSelect;
+						st = SelectionType.ContextSelect;
+						break;
 					}
-					return SelectionType.ContextOutside;
+					st = SelectionType.ContextOutside;
+					break;
 				case EventType.KeyDown: {
 					switch (e.keyCode) {
 						case KeyCode.UpArrow: {
@@ -113,17 +122,18 @@ namespace BattleKit.Editor {
 							e.Use();
 							break;
 						}
+						case KeyCode.KeypadEnter:
 						case KeyCode.Return: {
 							if (GUIUtility.keyboardControl == controlID) {
 								e.Use();
-								return SelectionType.Select;
+								st = SelectionType.Select;
 							}
 							break;
 						}
 						case KeyCode.Delete: {
 							if (GUIUtility.keyboardControl == controlID) {
 								e.Use();
-								return SelectionType.Delete;
+								st = SelectionType.Delete;
 							}
 							break;
 						}
@@ -131,7 +141,7 @@ namespace BattleKit.Editor {
 					break;
 				}
 			}
-			return SelectionType.None;
+			return st;
 		}
 
 		public static void Cell(string text) {
@@ -158,45 +168,16 @@ namespace BattleKit.Editor {
 			}
 		}
 
-
 		public static void EndTable() {
 			GUILayout.EndScrollView();
 		}
 
 		public static bool Header(TableHeader header) {
 			var controlID = GUIUtility.GetControlID(FocusType.Passive);
-
 			var label = new GUIContent(header.Label);
 			var headerPos = GUILayoutUtility.GetRect(label, StyleStore.ToolbarButton, GUILayout.Width(header.Width));
-			var resizeHandle = headerPos;
-			resizeHandle.x = resizeHandle.x + headerPos.width;
-			resizeHandle.width = RESIZE_HANDLE_SIZE;
 
-			EditorGUIUtility.AddCursorRect(resizeHandle, MouseCursor.ResizeHorizontal);
-
-			switch (Event.current.type) {
-				case EventType.MouseDown:
-					if (Event.current.button == 0
-						&& resizeHandle.Contains(Event.current.mousePosition)
-					) {
-						GUIUtility.hotControl = controlID;
-						Event.current.Use();
-					}
-					break;
-				case EventType.MouseDrag:
-					if (!Event.current.delta.x.Equals(0) &&
-						GUIUtility.hotControl == controlID) {
-						Event.current.Use();
-						header.Width = header.Width + Event.current.delta.x;
-					}
-					break;
-				case EventType.MouseUp:
-					if (GUIUtility.hotControl == controlID) {
-						GUIUtility.hotControl = 0;
-						Event.current.Use();
-					}
-					break;
-			}
+			header.Width += Controls.ResizeControl(headerPos.height, headerPos.x + headerPos.width, true);
 
 			return GUI.Button(headerPos, label, StyleStore.ToolbarButton);
 		}

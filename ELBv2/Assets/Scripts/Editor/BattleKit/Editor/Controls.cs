@@ -1,12 +1,18 @@
-using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
 namespace BattleKit.Editor {
 	static class Controls {
-		public static float ResizeControl(float height, float xPos) {
-			GUILayout.Box(GUIContent.none, StyleStore.Border, GUILayout.Width(1), GUILayout.Height(height));
 
+		public static float ResizeControl(float height, float xPos, bool noLayout = false) {
+			if (noLayout) {
+				Rect pos = new Rect(xPos, 0, 1, height);
+				GUI.Box(pos, GUIContent.none, StyleStore.Border);
+			} else {
+				GUILayout.Box(GUIContent.none, StyleStore.Border, GUILayout.Width(1), GUILayout.Height(height));
+			}
+			
+		
 			var resizeHandle = new Rect {
 				x = xPos,
 				y = 0,
@@ -16,7 +22,7 @@ namespace BattleKit.Editor {
 			var controlID = GUIUtility.GetControlID(FocusType.Passive, resizeHandle);
 
 			EditorGUIUtility.AddCursorRect(resizeHandle, MouseCursor.ResizeHorizontal);
-
+			var delta = 0f;
 			switch(Event.current.type) {
 				case EventType.MouseDown:
 					if(Event.current.button == 0
@@ -29,7 +35,7 @@ namespace BattleKit.Editor {
 				case EventType.MouseDrag:
 					if(!Event.current.delta.x.Equals(0) &&
 						GUIUtility.hotControl == controlID) {
-						xPos = xPos + Event.current.delta.x;
+						delta = Event.current.delta.x;
 						Event.current.Use();
 					}
 					break;
@@ -40,7 +46,7 @@ namespace BattleKit.Editor {
 					}
 					break;
 			}
-			return xPos;
+			return delta;
 		}
 	}
 }
