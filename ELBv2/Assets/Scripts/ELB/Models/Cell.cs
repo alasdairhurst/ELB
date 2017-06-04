@@ -1,4 +1,4 @@
-﻿using Engine.Data;
+using Engine.Data;
 
 namespace ELB.Models {
 	public class Cell : Model {

@@ -1,4 +1,4 @@
-﻿using SQLite4Unity3d;
+using SQLite4Unity3d;
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
@@ -74,6 +74,7 @@ namespace Engine.Data {
 			if (save != null) {
 				SetCurrentSave(save);
 			}
+			Debug.Log("Saving to " + save.Filename);
 			var _conn = new SQLiteConnection(Conf.savePath + currentSave.Filename, SQLiteOpenFlags.ReadWrite);
 			// remember types we already created tables for
 			var types = new List<Type>();
@@ -85,12 +86,14 @@ namespace Engine.Data {
 				}
 				_conn.InsertOrReplace(v);
 			}
+			Debug.Log("Save complete.");
 		}
 
 		public static List<ModelDB> LoadData(SaveInfo save = null) {
 			if (save != null) {
 				SetCurrentSave(save);
 			}
+			Debug.Log("Loading save from " + save.Filename);
 			var _conn = new SQLiteConnection(Conf.savePath + currentSave.Filename, SQLiteOpenFlags.ReadWrite);
 			var loadedData = new List<ModelDB>();
 			var subclasses = GameState.GetGeneratedModelTypes();
@@ -109,6 +112,7 @@ namespace Engine.Data {
 					// it's gonna complain about missing tables. ignore them
 				}
 			}
+			Debug.Log("Load complete");
 			return loadedData;
 		}
 	}
