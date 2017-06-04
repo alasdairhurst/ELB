@@ -173,7 +173,7 @@ namespace BattleKit.Editor {
 		}
 
 		public static bool Header(TableHeader header) {
-			var controlID = GUIUtility.GetControlID(FocusType.Passive);
+			// var controlID = GUIUtility.GetControlID(FocusType.Passive);
 			var label = new GUIContent(header.Label);
 			var headerPos = GUILayoutUtility.GetRect(label, StyleStore.ToolbarButton, GUILayout.Width(header.Width));
 

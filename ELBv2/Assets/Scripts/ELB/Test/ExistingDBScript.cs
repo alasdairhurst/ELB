@@ -1,7 +1,6 @@
 using UnityEngine;
-using Engine.Data;
-using Engine.String;
 using ELB.Models;
+using BattleKit.Engine;
 
 public class ExistingDBScript : MonoBehaviour {
 	// Use this for initialization

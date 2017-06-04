@@ -5,9 +5,8 @@ using System.IO;
 using System.Linq;
 using System;
 using System.Collections;
-using Engine.Data.Config;
 
-namespace Engine.Data {
+namespace BattleKit.Engine {
 	static class SaveManager {
 
 		private static SaveInfo currentSave;

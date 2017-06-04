@@ -1,4 +1,4 @@
-using Engine.Data;
+using BattleKit.Engine;
 using System;
 using System.Linq;
 using System.Reflection;
@@ -25,7 +25,7 @@ namespace BattleKit.Editor {
 
 		private void SetData(Model selection, bool editMode) {
 			_selection = selection;
-			_editMode = editMode;
+			//_editMode = editMode;
 			_props = _selection.GetType().GetProperties().OrderBy(prop => prop.Name).ToArray();
 		}
 

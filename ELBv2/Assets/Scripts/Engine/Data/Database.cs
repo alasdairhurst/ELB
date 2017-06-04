@@ -1,15 +1,15 @@
-﻿using SQLite4Unity3d;
+using SQLite4Unity3d;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Engine.Data {
+namespace BattleKit.Engine {
 	public class Database {
 		private Cache<string, ModelDB> cache;
 		private SQLiteConnection connection;
 
 		public Database() {
 			cache = new Cache<string, ModelDB>();
-			connection = new SQLiteConnection(Config.Conf.dbPath, SQLiteOpenFlags.ReadOnly);
+			connection = new SQLiteConnection(Conf.dbPath, SQLiteOpenFlags.ReadOnly);
 		}
 
 		public Model GetOne<Model>(string id, bool bypassCache = false) where Model : ModelDB, new() {
