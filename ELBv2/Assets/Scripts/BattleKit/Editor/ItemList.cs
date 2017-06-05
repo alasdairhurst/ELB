@@ -108,7 +108,7 @@ namespace BattleKit.Editor {
 		private SelectionType listItem(string text) {
 			var controlID = GUIUtility.GetControlID(FocusType.Keyboard);
 			SetIndex(controlID, text);
-			var style = _hasFocus ? StyleStore.LabelFocus : StyleStore.LabelNoFocus;
+			var style = _hasFocus ? StyleStore.LabelFocusStyle() : StyleStore.LabelUnfocusedStyle();
 			var rect = GUILayoutUtility.GetRect(EditorGUIUtility.fieldWidth, EditorGUIUtility.fieldWidth, 17f, 17f,
 				style);
 			var e = Event.current;
@@ -198,9 +198,9 @@ namespace BattleKit.Editor {
 				_foldoutExpanded[text] = true;
 			var foldout = _foldoutExpanded[text];
 			var itemPosition = GUILayoutUtility.GetRect(EditorGUIUtility.fieldWidth, EditorGUIUtility.fieldWidth, 17f, 17f,
-				StyleStore.LabelFocus);
+				StyleStore.LabelFocusStyle());
 			var content = new GUIContent(text);
-			var style = StyleStore.Foldout;
+			var style = StyleStore.FoldoutStyle();
 			var controlID = GUIUtility.GetControlID(FocusType.Keyboard, itemPosition);
 			SetIndex(controlID, text);
 			var eventType = Event.current.type;
@@ -259,7 +259,7 @@ namespace BattleKit.Editor {
 					}
 					break;
 				case EventType.Repaint: {
-						var bgStyle = _hasFocus ? StyleStore.LabelFocus : StyleStore.LabelNoFocus;
+						var bgStyle = _hasFocus ? StyleStore.LabelFocusStyle() : StyleStore.LabelUnfocusedStyle();
 						bgStyle.Draw(itemPosition, GUIContent.none, false, controlID == GUIUtility.hotControl, foldout,
 							controlID == _keyboardControl);
 						var position2 = new Rect(INDENT_WIDTH * _indentIDStack.Count, itemPosition.y,

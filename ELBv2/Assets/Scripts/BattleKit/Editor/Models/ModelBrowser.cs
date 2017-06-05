@@ -45,7 +45,7 @@ namespace BattleKit.Editor {
 				System.Collections.Generic.List<TableHeader> headers = _props.Select(prop => {
 					return new TableHeader { Label = prop.Name, Width = 100 };
 				}).ToList();
-				headers.Insert(0, new TableHeader { Label = "Asset ID", Width = 100 });
+				headers.Insert(0, new TableHeader { Label = "Asset Name", Width = 100 });
 				_headers = headers.ToArray();
 				_loadedInfoForType = _selectedType;
 				

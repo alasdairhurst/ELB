@@ -58,7 +58,7 @@ namespace BattleKit.Editor {
 		public static SelectionType StartRow() {
 			var rect = EditorGUILayout.BeginHorizontal();
 			GUILayout.Space(LEFT_PADDING);
-			GUILayout.Box(GUIContent.none, StyleStore.Border, GUILayout.Width(1));
+			GUILayout.Box(GUIContent.none, StyleStore.BorderStyle(), GUILayout.Width(1));
 			_drawIndexCol = 0;
 
 			var controlID = GUIUtility.GetControlID(FocusType.Keyboard);
@@ -70,7 +70,7 @@ namespace BattleKit.Editor {
 			var e = Event.current;
 			switch (e.type) {
 				case EventType.Repaint:
-					var style = _hasFocus ? StyleStore.LabelFocus : StyleStore.LabelNoFocus;
+					var style = _hasFocus ? StyleStore.LabelFocusStyle() : StyleStore.LabelUnfocusedStyle();
 					style.Draw(rect, GUIContent.none, false, false, false, _drawIndexRow == _selectedRowIndex);
 					break;
 				case EventType.MouseDown: {
@@ -145,18 +145,18 @@ namespace BattleKit.Editor {
 		}
 
 		public static void Cell(string text) {
-			var rect = GUILayoutUtility.GetRect(new GUIContent(text), StyleStore.TableCell, GUILayout.Width(_headers[_drawIndexCol].Width - 1));
+			var rect = GUILayoutUtility.GetRect(new GUIContent(text), StyleStore.TableCellStyle(), GUILayout.Width(_headers[_drawIndexCol].Width - 1));
 
 			if (Event.current.type == EventType.repaint) {
-				StyleStore.TableCell.Draw(rect, new GUIContent(text), false, false, false, _drawIndexRow == _selectedRowIndex);
+				StyleStore.TableCellStyle().Draw(rect, new GUIContent(text), false, false, false, _drawIndexRow == _selectedRowIndex);
 			}
 			_drawIndexCol++;
-			GUILayout.Box(GUIContent.none, StyleStore.Border, GUILayout.Width(1));
+			GUILayout.Box(GUIContent.none, StyleStore.BorderStyle(), GUILayout.Width(1));
 		}
 
 		public static void EndRow() {
 			EditorGUILayout.EndHorizontal();
-			GUILayout.Box(GUIContent.none, StyleStore.Border, GUILayout.Height(1));
+			GUILayout.Box(GUIContent.none, StyleStore.BorderStyle(), GUILayout.Height(1));
 			_drawIndexRow++;
 		}
 
@@ -175,11 +175,11 @@ namespace BattleKit.Editor {
 		public static bool Header(TableHeader header) {
 			// var controlID = GUIUtility.GetControlID(FocusType.Passive);
 			var label = new GUIContent(header.Label);
-			var headerPos = GUILayoutUtility.GetRect(label, StyleStore.ToolbarButton, GUILayout.Width(header.Width));
+			var headerPos = GUILayoutUtility.GetRect(label, StyleStore.ToolbarButtonStyle(), GUILayout.Width(header.Width));
 
 			header.Width += Controls.ResizeControl(headerPos.height, headerPos.x + headerPos.width, true);
 
-			return GUI.Button(headerPos, label, StyleStore.ToolbarButton);
+			return GUI.Button(headerPos, label, StyleStore.ToolbarButtonStyle());
 		}
 	}
 }

@@ -9,11 +9,11 @@ public class ExistingDBScript : MonoBehaviour {
 	void Start() {
 		//var save = SaveManager.GetLatestSave();
 		//if (save != null) {
-			//SaveManager.SetCurrentSave(save);
+		//SaveManager.SetCurrentSave(save);
 		//}
-
 		Board board = ScriptableObject.CreateInstance<Board>();
+		Cell cell = Model.Find<Cell>("New Cell");
+		Debug.Log(cell.ToString(true));
 		Debug.Log(board.ToString(true));
-		Debug.Log(board.ToString());
 	}
 }
