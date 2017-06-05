@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.CodeDom;
 using System.CodeDom.Compiler;
 using Microsoft.CSharp;
+using UnityEngine;
 namespace BattleKit.Engine {
 	public static class GameState {
 
@@ -23,11 +24,11 @@ namespace BattleKit.Engine {
 			db = new Database();
 			modelFlags = new Dictionary<string, ModelFlag>();
 			state = new Cache<string, object>();
-
 			// generate type map
 			var t = typeof(Model);
 			var codeNamespace = new CodeNamespace("Engine.DB");
 			codeNamespace.Imports.Add(new CodeNamespaceImport("System"));
+
 
 			var subclasses = t.Assembly.GetTypes().Where(type => type.IsSubclassOf(t));
 			foreach (var c in subclasses) {
@@ -39,7 +40,7 @@ namespace BattleKit.Engine {
 				PropertyInfo[] properties = c.GetProperties();
 				foreach (PropertyInfo pi in properties) {
 					// ignore the property if it exists in the model base
-					if (typeof(ModelBase).GetProperties().Count(x => x.Name == pi.Name) != 0) {
+					if (typeof(Model).GetProperties().Count(x => x.Name == pi.Name) != 0) {
 						continue;
 					}
 					var snippet = new CodeSnippetTypeMember {
@@ -72,6 +73,7 @@ namespace BattleKit.Engine {
 			if (compilerResults == null) {
 				throw new InvalidOperationException("ClassCompiler did not return results.");
 			}
+
 			if (compilerResults.Errors.HasErrors) {
 				var errors = string.Empty;
 				foreach (CompilerError compilerError in compilerResults.Errors) {
@@ -200,7 +202,7 @@ namespace BattleKit.Engine {
 				throw new Exception(string.Format("Trying to convert {0} to {1}", genModel.GetType().FullName, typeof(M).FullName));
 			}
 			
-			var model = Activator.CreateInstance(typeof(M));
+			var model = Model.CreateInstance<M>();
 			PropertyInfo[] stateModelProperties = genModel.GetType().GetProperties();
 			PropertyInfo[] modelProperties = model.GetType().GetProperties();
 
@@ -211,6 +213,11 @@ namespace BattleKit.Engine {
 
 				// get info for matching property
 				var sp = stateModelProperties.Where(x => x.Name == pi.Name).FirstOrDefault();
+
+				if (sp == null) {
+					// model has a property which DB model doesn't have?
+					continue;
+				}
 
 				// get value to write
 				object value = sp.GetValue(genModel, null);

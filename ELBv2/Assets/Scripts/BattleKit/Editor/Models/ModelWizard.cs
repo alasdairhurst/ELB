@@ -37,6 +37,14 @@ namespace BattleKit.Editor {
 			ShowWizard(Activator.CreateInstance(t) as Model, false);
 		}
 
+		void OnDestroy( ) {
+			_selection = null;
+		}
+
+		void OnSave( ) {
+			Close();
+		}
+
 		void OnGUI( ) {
 			if(_selection == null) {
 				return;
@@ -77,7 +85,10 @@ namespace BattleKit.Editor {
 								// case "Model"
 								if(propertyInfo.PropertyType.IsSubclassOf(typeof(Model))) {
 									value = CustomFields.ModelField(new GUIContent(propertyInfo.Name), currentVal as Model, propertyInfo.PropertyType, this);
-								// case "enum"
+								// case "Collection"
+								} else if(Utils.isSubclassOfRawGeneric(typeof(Collection<>), propertyInfo.PropertyType)) {
+								
+								// case "Enum"
 								} else if(propertyInfo.PropertyType.IsEnum) {
 									value = EditorGUILayout.EnumPopup(new GUIContent(propertyInfo.Name), currentVal as Enum);
 								} else {
@@ -87,10 +98,10 @@ namespace BattleKit.Editor {
 								}
 							}
 							break;
-					}
-					if(currentVal != value) {
-						propertyInfo.SetValue(_selection, value, null);
-					}
+						}
+						if(currentVal != value) {
+							propertyInfo.SetValue(_selection, value, null);
+						}
 				}
 
 				GUILayout.BeginHorizontal();
@@ -108,14 +119,6 @@ namespace BattleKit.Editor {
 				GUILayout.EndHorizontal();
 			}
 			GUILayout.EndScrollView();
-		}
-
-		void OnDestroy( ) {
-			_selection = null;
-		}
-
-		void OnSave( ) {
-			Close();
 		}
 	}
 }

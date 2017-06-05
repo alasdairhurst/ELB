@@ -13,7 +13,7 @@ public class ExistingDBScript : MonoBehaviour {
 			SaveManager.SetCurrentSave(save);
 		}
 
-		Board board = new Board();
+		Board board = Model.CreateInstance<Board>();
 		Debug.Log(board.ToString(StringOpts.Pretty));
 		board.Fetch("{9A69826B-5BC5-4F89-9066-6D52D598979B}");
 		Debug.Log(board.ToString(StringOpts.Pretty));

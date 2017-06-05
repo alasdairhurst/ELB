@@ -85,6 +85,9 @@ namespace BattleKit.Editor {
 		}
 
 		private void OnGUI() {
+			if (_models == null) {
+				return;
+			}
 			GUILayout.BeginHorizontal();
 
 			_scrollPos = EditorGUILayout.BeginScrollView(_scrollPos, GUILayout.Width(_listWidth));
@@ -201,7 +204,9 @@ namespace BattleKit.Editor {
 			if (instance == null) {
 				return;
 			}
-			ModelWizard.ShowWizard(instance as Model);
+			Selection.objects = new UnityEngine.Object[] { instance as Model };
+
+			//ModelWizard.ShowWizard(instance as Model);
 		}
 
 		private bool CanPaste() {
