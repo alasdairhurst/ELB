@@ -1,14 +1,26 @@
 using BattleKit.Engine;
+using System.Collections.Generic;
+using UnityEngine;
+
 namespace ELB.Models {
 	public class Cell : Model {
-		public int Size { get; set; }
-		public float Height { get; set; }
-		public Landscape Landscape { get; set; }
-		public string Name { get; set; }
-		public Building Building { get; set; }
-		public string Owner { get; set; }
-		public string[] Commanders { get; set; }
-		public Collection<Unit> Prisoners { get; set; }
-		public Collection<Unit> Defenders { get; set; }
+		[SerializeField]
+		public int Size;
+		[SerializeField]
+		public float Height;
+		[SerializeField]
+		public Landscape Landscape;
+		[SerializeField]
+		public string Name;
+		[SerializeField]
+		public Building Building;
+		[SerializeField]
+		public string Owner;
+		[SerializeField]
+		public string[] Commanders;
+		[SerializeField]
+		public List<Unit> Prisoners;
+		[SerializeField]
+		public List<Unit> Defenders;
 	}
 }
