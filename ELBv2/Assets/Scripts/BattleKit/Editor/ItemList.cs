@@ -86,7 +86,7 @@ namespace BattleKit.Editor {
 				return SelectionType.None;
 			}
 			_indentIDStack.Push(text);
-			return foldoutItem(text);
+			return listItem(text, true);
 		}
 
 		public void EndFoldoutGroup( ) {
@@ -98,33 +98,50 @@ namespace BattleKit.Editor {
 			if(_indentIDStack.Count != 0 && !_foldoutExpanded[_indentIDStack.Peek()]) {
 				return SelectionType.None;
 			}
-			return listItem(text);
+			return listItem(text, false);
 		}
 
 		public void SetFocus(bool hasFocus) {
 			_hasFocus = hasFocus;
 		}
 
-		private SelectionType listItem(string text) {
-			var controlID = GUIUtility.GetControlID(FocusType.Keyboard);
-			SetIndex(controlID, text);
-			var style = _hasFocus ? StyleStore.LabelFocusStyle() : StyleStore.LabelUnfocusedStyle();
+		private SelectionType listItem(string text, bool isFoldout) {
+
+			if(isFoldout && !_foldoutExpanded.ContainsKey(text)) {
+				_foldoutExpanded[text] = true;
+			}
+			var foldout = isFoldout && _foldoutExpanded[text];
+
+			var style = isFoldout ? StyleStore.FoldoutStyle() : _hasFocus ? StyleStore.LabelFocusStyle() : StyleStore.LabelUnfocusedStyle();
 			var rect = GUILayoutUtility.GetRect(EditorGUIUtility.fieldWidth, EditorGUIUtility.fieldWidth, 17f, 17f,
-				style);
+				isFoldout ? StyleStore.LabelFocusStyle() : style);
+
+
+			var controlID = GUIUtility.GetControlID(FocusType.Keyboard, rect);
+			SetIndex(controlID, text);
+
 			var e = Event.current;
 			var selected = _keyboardControl == controlID;
-			SelectionType st = selected  && _hasFocus ? SelectionType.Focus : SelectionType.None;
+			SelectionType st = selected && _hasFocus ? SelectionType.Focus : SelectionType.None;
+
 			switch(e.type) {
 				case EventType.Repaint:
-					style.Draw(rect, GUIContent.none, false, GUIUtility.hotControl == controlID, false,
-						selected);
 					var textPosition = rect;
 					textPosition.x = INDENT_WIDTH * _indentIDStack.Count;
-					style.Draw(textPosition, new GUIContent(text), false, GUIUtility.hotControl == controlID, false,
+
+					if(isFoldout) {
+						var bgStyle = _hasFocus ? StyleStore.LabelFocusStyle() : StyleStore.LabelUnfocusedStyle();
+						bgStyle.Draw(rect, GUIContent.none, false, controlID == GUIUtility.hotControl, foldout,
+							selected);
+						textPosition.width = EditorGUIUtility.labelWidth - ARROW_WIDTH;
+					} else {
+						style.Draw(rect, GUIContent.none, false, GUIUtility.hotControl == controlID, false,
 						selected);
+					}
+					style.Draw(textPosition, new GUIContent(text), false, GUIUtility.hotControl == controlID, isFoldout && foldout, selected);
 					break;
 				case EventType.ContextClick:
-					if(rect.Contains(e.mousePosition) && _keyboardControl == controlID) {
+					if(rect.Contains(e.mousePosition) && selected) {
 						e.Use();
 						st = SelectionType.ContextSelect;
 					}
@@ -151,142 +168,89 @@ namespace BattleKit.Editor {
 					if((e.button == 0) && (GUIUtility.hotControl == controlID)) {
 						GUIUtility.hotControl = 0;
 						e.Use();
-					}
-					break;
-				case EventType.KeyDown:
-					if (!_hasFocus) {
-						break;
-					}
-					switch (e.keyCode) {
-						case KeyCode.UpArrow: {
-							if (HasPrevious() && controlID == GetPreviousId()) {
-									_keyboardControl = PreviousId();
-								e.Use();
+						if(isFoldout) {
+							var rect2 = rect;
+							rect2.width = style.padding.left;
+							rect2.x += INDENT_WIDTH * _indentIDStack.Count;
+							if(rect2.Contains(e.mousePosition)) {
+								_foldoutExpanded[text] = !foldout;
 							}
-							break;
-						}
-						case KeyCode.DownArrow: {
-							if(HasNext() && controlID == GetNextId()) {
-								_keyboardControl = NextId();
-								e.Use();
-							}
-							break;
-						}
-						case KeyCode.KeypadEnter:
-						case KeyCode.Return: {
-							if (_keyboardControl == controlID) {
-								e.Use();
-								st = SelectionType.Select;
-							}
-							break;
-						}
-						case KeyCode.Delete: {
-							if(_keyboardControl == controlID) {
-								e.Use();
-								return SelectionType.Delete;
-							}
-							break;
 						}
 					}
-					break;
-			}
-			return st;
-		}
-
-		private SelectionType foldoutItem(string text) {
-			if(!_foldoutExpanded.ContainsKey(text))
-				_foldoutExpanded[text] = true;
-			var foldout = _foldoutExpanded[text];
-			var itemPosition = GUILayoutUtility.GetRect(EditorGUIUtility.fieldWidth, EditorGUIUtility.fieldWidth, 17f, 17f,
-				StyleStore.LabelFocusStyle());
-			var content = new GUIContent(text);
-			var style = StyleStore.FoldoutStyle();
-			var controlID = GUIUtility.GetControlID(FocusType.Keyboard, itemPosition);
-			SetIndex(controlID, text);
-			var eventType = Event.current.type;
-			var selected = _keyboardControl == controlID;
-			SelectionType st = selected && _hasFocus ? SelectionType.Focus : SelectionType.None;
-			if(!GUI.enabled &&
-				((Event.current.rawType == EventType.MouseDown) || (Event.current.rawType == EventType.MouseDrag) ||
-				 (Event.current.rawType == EventType.MouseUp)))
-				eventType = Event.current.rawType;
-			var eventType2 = eventType;
-			switch(eventType2) {
-				case EventType.MouseDown:
-					if(itemPosition.Contains(Event.current.mousePosition) && (Event.current.button == 0)) {
-						GUIUtility.hotControl = controlID;
-						_keyboardControl = controlID;
-						SetSelected(controlID);
-						Event.current.Use();
-					}
-					break;
-				case EventType.MouseUp:
-					if(GUIUtility.hotControl == controlID) {
-						GUIUtility.hotControl = 0;
-						Event.current.Use();
-						var rect2 = itemPosition;
-						rect2.width = style.padding.left;
-						rect2.x += INDENT_WIDTH * _indentIDStack.Count;
-						if(rect2.Contains(Event.current.mousePosition)) {
-							_foldoutExpanded[text] = !foldout;
-						}
-					}
-					break;
-				case EventType.MouseMove:
-				case EventType.KeyUp:
-				case EventType.ScrollWheel:
-				case EventType.Layout:
 					break;
 				case EventType.MouseDrag:
 					if(GUIUtility.hotControl == controlID)
-						Event.current.Use();
+						e.Use();
 					break;
-				case EventType.KeyDown:
-					var keyCode = Event.current.keyCode;
-					if(_keyboardControl == controlID) {
-						if(((keyCode == KeyCode.LeftArrow) && foldout) || ((keyCode == KeyCode.RightArrow) && !foldout)) {
-							Event.current.Use();
-							_foldoutExpanded[text] = !foldout;
-						}
-					} else if(keyCode == KeyCode.UpArrow && HasPrevious() && (controlID == GetPreviousId())) {
-						_keyboardControl = PreviousId();
-						Event.current.Use();
-						SetSelected(controlID);
-					} else if(keyCode == KeyCode.DownArrow && HasNext() && (controlID == GetNextId())) {
-						_keyboardControl = NextId();
-						Event.current.Use();
-						SetSelected(controlID);
-					}
-					break;
-				case EventType.Repaint: {
-						var bgStyle = _hasFocus ? StyleStore.LabelFocusStyle() : StyleStore.LabelUnfocusedStyle();
-						bgStyle.Draw(itemPosition, GUIContent.none, false, controlID == GUIUtility.hotControl, foldout,
-							controlID == _keyboardControl);
-						var position2 = new Rect(INDENT_WIDTH * _indentIDStack.Count, itemPosition.y,
-							EditorGUIUtility.labelWidth - ARROW_WIDTH, itemPosition.height);
-						style.Draw(position2, content, false, controlID == GUIUtility.hotControl, foldout,
-							controlID == _keyboardControl);
-						break;
-					}
 				case EventType.DragUpdated:
 					if(_dragUpdatedOverId == controlID) {
-						if(itemPosition.Contains(Event.current.mousePosition)) {
+						if(rect.Contains(e.mousePosition)) {
 							if(Time.realtimeSinceStartup > _foldoutDestTime) {
 								_foldoutExpanded[text] = true;
-								Event.current.Use();
+								e.Use();
 							}
 						} else {
 							_dragUpdatedOverId = 0;
 						}
-					} else if(itemPosition.Contains(Event.current.mousePosition)) {
+					} else if(rect.Contains(e.mousePosition)) {
 						_dragUpdatedOverId = controlID;
 						_foldoutDestTime = Time.realtimeSinceStartup + 0.7;
-						Event.current.Use();
+						e.Use();
 					}
 					break;
+				case EventType.KeyDown: {
+					if(!_hasFocus) {
+						break;
+					}
+					switch(e.keyCode) {
+						case KeyCode.LeftArrow: {
+								if(foldout) {
+									e.Use();
+									_foldoutExpanded[text] = false;
+								}
+								break;
+							}
+						case KeyCode.RightArrow: {
+								if(!foldout) {
+									e.Use();
+									_foldoutExpanded[text] = true;
+								}
+								break;
+							}
+						case KeyCode.UpArrow: {
+								if(HasPrevious() && controlID == GetPreviousId()) {
+									_keyboardControl = PreviousId();
+									e.Use();
+								}
+								break;
+							}
+						case KeyCode.DownArrow: {
+								if(HasNext() && controlID == GetNextId()) {
+									_keyboardControl = NextId();
+									e.Use();
+								}
+								break;
+							}
+						case KeyCode.KeypadEnter:
+						case KeyCode.Return: {
+								if(_keyboardControl == controlID) {
+									e.Use();
+									st = SelectionType.Select;
+								}
+								break;
+							}
+						case KeyCode.Delete: {
+								if(_keyboardControl == controlID) {
+									e.Use();
+									return SelectionType.Delete;
+								}
+								break;
+							}
+					}
+					break;
+				}
 			}
 			return st;
 		}
 	}
-
 }

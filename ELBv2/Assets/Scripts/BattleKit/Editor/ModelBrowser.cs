@@ -6,7 +6,6 @@ using System.Collections;
 using System.Reflection;
 using BattleKit.Engine;
 using System.IO;
-using System.Collections.Generic;
 
 namespace BattleKit.Editor {
 	public sealed class ModelBrowser : EditorWindow {
