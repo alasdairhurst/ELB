@@ -1,4 +1,3 @@
-using System.Reflection;
 using System;
 using UnityEngine;
 using System.Linq;
@@ -6,11 +5,12 @@ using System.Linq;
 namespace BattleKit.Engine {
 
 	[Serializable]
-	public class Model : ScriptableObject {
+	public abstract class Model : ScriptableObject {
 
 		public static T Find<T>(string name) where T : Model {
-			var objects = Resources.FindObjectsOfTypeAll(typeof(T));
-			return objects.FirstOrDefault(x => x.name == name) as T;
+			return (from resource in Resources.FindObjectsOfTypeAll<T>()
+			where resource.name == name
+			select resource).FirstOrDefault();
 		}
 
 		public override string ToString( ) {
