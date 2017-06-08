@@ -60,18 +60,19 @@ namespace BattleKit.Editor {
 			return _idIndexes[_selectedIndex + 1];
 		}
 
-		public void Preselect(string title) {
+		public void Select(string title) {
+			_selectionSet = false;
 			_preselection = title;
 		}
 
-		public void Start( ) {
+		public void Start(bool hasFocus) {
+			_hasFocus = hasFocus;
 			_drawIndex = 0;
 		}
 
 		public void End( ) {
 			_idIndexes.Clear();
 		}
-
 
 		public enum SelectionType {
 			None,
@@ -99,10 +100,6 @@ namespace BattleKit.Editor {
 				return SelectionType.None;
 			}
 			return listItem(text, false);
-		}
-
-		public void SetFocus(bool hasFocus) {
-			_hasFocus = hasFocus;
 		}
 
 		private SelectionType listItem(string text, bool isFoldout) {

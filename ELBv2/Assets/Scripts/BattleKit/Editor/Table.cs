@@ -63,7 +63,8 @@ namespace BattleKit.Editor {
 
 			var controlID = GUIUtility.GetControlID(FocusType.Keyboard);
 			var st = SelectionType.None;
-			if (_selectedRowIndex == _drawIndexRow && _hasFocus) {
+			bool rowSelected = _selectedRowIndex == _drawIndexRow;
+			if(rowSelected && _hasFocus) {
 				GUIUtility.keyboardControl = controlID;
 				st = SelectionType.Focus;
 			}
@@ -71,7 +72,7 @@ namespace BattleKit.Editor {
 			switch (e.type) {
 				case EventType.Repaint:
 					var style = _hasFocus ? StyleStore.LabelFocusStyle() : StyleStore.LabelUnfocusedStyle();
-					style.Draw(rect, GUIContent.none, false, false, false, _drawIndexRow == _selectedRowIndex);
+					style.Draw(rect, GUIContent.none, false, false, false, rowSelected);
 					break;
 				case EventType.MouseDown: {
 					bool stSet = false;

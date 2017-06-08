@@ -83,6 +83,9 @@ namespace BattleKit.Editor {
 				st = _itemList.ListItem(title, true);
 			}
 			switch(st) {
+				case ItemList.SelectionType.ContextSelect:
+				case ItemList.SelectionType.Select:
+				case ItemList.SelectionType.Delete:
 				case ItemList.SelectionType.Focus:
 					_listHasFocus = true;
 					_selectedType = t;
@@ -101,8 +104,7 @@ namespace BattleKit.Editor {
 				if(Event.current.isMouse) {
 					_listHasFocus = true;
 				}
-				_itemList.SetFocus(_listHasFocus);
-				_itemList.Start();
+				_itemList.Start(_listHasFocus);
 					DrawChildren(typeof(Model));
 				_itemList.End();
 			}
@@ -121,7 +123,7 @@ namespace BattleKit.Editor {
 				Table.Headers(_headers);
 				Table.StartBody();
 				foreach (Model instance in _collection) {
-					HandleRowSelection(Table.StartRow(), instance as Model);
+					HandleRowSelection(Table.StartRow(), instance);
 					{
 						Table.Cell((instance as Model).name);
 						foreach (var propertyInfo in _props) {
