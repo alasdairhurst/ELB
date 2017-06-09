@@ -5,22 +5,22 @@ using UnityEngine;
 namespace ELB.Models {
 	public class Cell : Model {
 		[SerializeField]
-		public int Size;
+		private int Size;
 		[SerializeField]
-		public float Height;
+		private float Height;
 		[SerializeField]
-		public Landscape Landscape;
+		private Landscape Landscape;
 		[SerializeField]
-		public string Name;
+		private string Name;
 		[SerializeField]
-		public Building Building;
+		private Building Building;
 		[SerializeField]
-		public string Owner;
+		private string Owner;
 		[SerializeField]
-		public string[] Commanders;
+		private string[] Commanders;
 		[SerializeField]
-		public List<Unit> Prisoners;
+		private List<Unit> Prisoners;
 		[SerializeField]
-		public List<Unit> Defenders;
+		private List<Unit> Defenders;
 	}
 }

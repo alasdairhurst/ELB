@@ -1,9 +1,9 @@
 using System;
 using UnityEngine;
 using System.Linq;
+using UnityEngine.Events;
 
 namespace BattleKit.Engine {
-
 	[Serializable]
 	public abstract class Model : ScriptableObject {
 
@@ -24,5 +24,15 @@ namespace BattleKit.Engine {
 			}
 			return s += JsonUtility.ToJson(this, pretty);
 		}
+
+		[HideInInspector]
+		public UnityEvent InspectorOnChange;
+
+		public void OnValidate() {
+			if (InspectorOnChange != null) {
+				InspectorOnChange.Invoke();
+			}
+		}
+
 	}
 }
