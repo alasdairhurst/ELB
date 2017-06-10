@@ -12,6 +12,7 @@ namespace BattleKit.Editor {
 		private const int RENAME_BUTTON_WIDTH = 50;
 		private string _name = string.Empty;
 		private string _renameError = string.Empty;
+		private string _currentAssetPath = string.Empty;
 
 		private void ShowRename() {
 			_isRenaming = true;
@@ -22,27 +23,36 @@ namespace BattleKit.Editor {
 			GUIUtility.keyboardControl = 0;
 			_renameError = string.Empty;
 			_name = target.name;
+			CreateInstance(target.GetType());
 			_isRenaming = false;
 		}
 
 		private void Rename(string name) {
-			var currentPath = AssetDatabase.GetAssetPath(target);
-			_renameError = AssetDatabase.RenameAsset(currentPath, name);
+			_renameError = AssetDatabase.RenameAsset(_currentAssetPath, name);
 			if (string.IsNullOrEmpty(_renameError)) {
+				target.name = name;
+				_currentAssetPath = AssetDatabase.GetAssetPath(target);
+				(target as Model).InspectorOnChange.Invoke();
 				HideRename();
 			}
 		}
 
 
 		void OnEnable() {
+			_currentAssetPath = AssetDatabase.GetAssetPath(target);
 			_name = target.name;
+			(target as Model).InspectorOnChange.AddListener(ModelBrowser.RepaintWindow);
+		}
+
+		void OnDestroy() {
+			(target as Model).InspectorOnChange.RemoveListener(ModelBrowser.RepaintWindow);
 		}
 
 		private bool ValidateRename(string name) {
 			return name != target.name;
 		}
 
-		private void RenderRename() {
+		private void RenderRenameAsset() {
 			using (new EditorGUILayout.HorizontalScope()) {
 				if (!_isRenaming) {
 					if (GUILayout.Button("Rename")) {
@@ -70,8 +80,16 @@ namespace BattleKit.Editor {
 		}
 
 		public override void OnInspectorGUI() {
-			RenderRename();
-			EditorGUILayout.Separator();
+			if (!string.IsNullOrEmpty(_currentAssetPath)) {
+				RenderRenameAsset();
+				EditorGUILayout.Separator();
+			} else {
+				var name = EditorGUILayout.TextField("Asset Name", target.name);
+				if (name != target.name) {
+					target.name = name;
+					(target as Model).InspectorOnChange.Invoke();
+				}
+			}
 			DrawDefaultInspector();
 		}
 	}

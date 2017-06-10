@@ -1,8 +1,10 @@
 using BattleKit.Engine;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace ELB.Models {
+	[Serializable]
 	public class Cell : Model {
 		[SerializeField]
 		private int Size;

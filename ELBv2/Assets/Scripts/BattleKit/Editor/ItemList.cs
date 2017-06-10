@@ -119,9 +119,9 @@ namespace BattleKit.Editor {
 
 			var e = Event.current;
 			var selected = _keyboardControl == controlID;
-			SelectionType st = selected && _hasFocus ? SelectionType.Focus : SelectionType.None;
-
-			switch(e.type) {
+			//SelectionType st = selected && _hasFocus ? SelectionType.Focus : SelectionType.None;
+			SelectionType st = SelectionType.None;
+			switch (e.type) {
 				case EventType.Repaint:
 					var textPosition = rect;
 					textPosition.x = INDENT_WIDTH * _indentIDStack.Count;

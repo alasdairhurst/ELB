@@ -19,8 +19,8 @@ namespace BattleKit.Editor {
 	static class Table {
 		private const int RESIZE_HANDLE_SIZE = 4;
 		private const int LEFT_PADDING = 6;
-		private static TableHeader[] _headers;
 		private static int _selectedRowIndex;
+		private static Rect lastHeaderPos;
 		private static int _drawIndexCol;
 		private static int _drawIndexRow;
 		private static Vector2 _scrollPos;
@@ -29,18 +29,32 @@ namespace BattleKit.Editor {
 		public static void StartTable(bool hasFocus = true) {
 			_scrollPos = GUILayout.BeginScrollView(_scrollPos);
 			_hasFocus = hasFocus;
-			
 		}
 
-		public static void Headers(TableHeader[] headers) {
-			_headers = headers;
+
+		public static void StartHeaders() {
 			GUILayout.BeginHorizontal("Toolbar");
-			foreach (var tableHeader in _headers) {
-				Header(tableHeader);
-			}
+		}
+
+
+		public static bool Header(string label, float width) {
+			// var controlID = GUIUtility.GetControlID(FocusType.Passive);
+			lastHeaderPos = GUILayoutUtility.GetRect(new GUIContent(label), StyleStore.ToolbarButtonStyle(), GUILayout.Width(width));
+
+			//header.Width += Controls.ResizeControl(headerPos.height, headerPos.x + headerPos.width, true);
+
+			return GUI.Button(lastHeaderPos, label, StyleStore.ToolbarButtonStyle());
+		}
+
+		public static float HeaderResizeControl() {
+			return Controls.ResizeControl(lastHeaderPos.height, lastHeaderPos.x + lastHeaderPos.width, true);
+		}
+
+		public static void EndHeaders() {
 			GUILayout.FlexibleSpace();
 			GUILayout.EndHorizontal();
 		}
+
 
 		public static void StartBody() {
 			_drawIndexRow = 0;
@@ -65,8 +79,10 @@ namespace BattleKit.Editor {
 			var st = SelectionType.None;
 			bool rowSelected = _selectedRowIndex == _drawIndexRow;
 			if(rowSelected && _hasFocus) {
-				GUIUtility.keyboardControl = controlID;
-				st = SelectionType.Focus;
+				if (GUIUtility.keyboardControl != controlID) {
+					st = SelectionType.Focus;
+					GUIUtility.keyboardControl = controlID;
+				}
 			}
 			var e = Event.current;
 			switch (e.type) {
@@ -112,6 +128,9 @@ namespace BattleKit.Editor {
 					st = SelectionType.ContextOutside;
 					break;
 				case EventType.KeyDown: {
+					if (!_hasFocus) {
+						break;
+					}
 					switch (e.keyCode) {
 						case KeyCode.UpArrow: {
 							_selectedRowIndex--;
@@ -145,8 +164,8 @@ namespace BattleKit.Editor {
 			return st;
 		}
 
-		public static void Cell(string text) {
-			var rect = GUILayoutUtility.GetRect(new GUIContent(text), StyleStore.TableCellStyle(), GUILayout.Width(_headers[_drawIndexCol].Width - 1));
+		public static void Cell(string text, float width) {
+			var rect = GUILayoutUtility.GetRect(new GUIContent(text), StyleStore.TableCellStyle(), GUILayout.Width(width));
 
 			if (Event.current.type == EventType.repaint) {
 				StyleStore.TableCellStyle().Draw(rect, new GUIContent(text), false, false, false, _drawIndexRow == _selectedRowIndex);
@@ -171,16 +190,6 @@ namespace BattleKit.Editor {
 
 		public static void EndTable() {
 			GUILayout.EndScrollView();
-		}
-
-		public static bool Header(TableHeader header) {
-			// var controlID = GUIUtility.GetControlID(FocusType.Passive);
-			var label = new GUIContent(header.Label);
-			var headerPos = GUILayoutUtility.GetRect(label, StyleStore.ToolbarButtonStyle(), GUILayout.Width(header.Width));
-
-			header.Width += Controls.ResizeControl(headerPos.height, headerPos.x + headerPos.width, true);
-
-			return GUI.Button(headerPos, label, StyleStore.ToolbarButtonStyle());
 		}
 	}
 }

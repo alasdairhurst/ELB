@@ -4,6 +4,17 @@ using System.Linq;
 using UnityEngine.Events;
 
 namespace BattleKit.Engine {
+
+	public static class ModelHelpers {
+		public static T Clone<T>(this T model) where T : Model {
+			var clone = ScriptableObject.Instantiate(model);
+			if (!string.IsNullOrEmpty(model.name)) {
+				clone.name = model.name + "(Clone)";
+			}
+			return clone;
+		}
+	}
+
 	[Serializable]
 	public abstract class Model : ScriptableObject {
 
