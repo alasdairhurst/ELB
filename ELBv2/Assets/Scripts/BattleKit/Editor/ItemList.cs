@@ -10,6 +10,7 @@ namespace BattleKit.Editor {
 		private Stack<string> _indentIDStack = new Stack<string>();
 		private bool _hasFocus = true;
 		private int _keyboardControl;
+		private int _selectedRowIndex;
 		private string _currentFoldoutID;
 		private int _selectedIndex;
 		private int _drawIndex;
@@ -87,15 +88,17 @@ namespace BattleKit.Editor {
 				return SelectionType.None;
 			}
 			_indentIDStack.Push(text);
+			EditorGUI.indentLevel++;
 			return listItem(text, true);
 		}
 
 		public void EndFoldoutGroup( ) {
 			_indentIDStack.Pop();
+			EditorGUI.indentLevel--;
 		}
 
 
-		public SelectionType ListItem(string text, bool something = true) {
+		public SelectionType ListItem(string text) {
 			if(_indentIDStack.Count != 0 && !_foldoutExpanded[_indentIDStack.Peek()]) {
 				return SelectionType.None;
 			}
@@ -124,7 +127,7 @@ namespace BattleKit.Editor {
 			switch (e.type) {
 				case EventType.Repaint:
 					var textPosition = rect;
-					textPosition.x = INDENT_WIDTH * _indentIDStack.Count;
+					textPosition.x = INDENT_WIDTH * EditorGUI.indentLevel;
 
 					if(isFoldout) {
 						var bgStyle = _hasFocus ? StyleStore.LabelFocusStyle() : StyleStore.LabelUnfocusedStyle();

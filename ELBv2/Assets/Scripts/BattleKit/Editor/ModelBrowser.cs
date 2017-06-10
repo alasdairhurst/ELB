@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using BattleKit.Engine;
 using System.IO;
-using ELB.Models;
 
 namespace BattleKit.Editor {
 	public sealed class ModelBrowser : EditorWindow {
@@ -111,7 +110,7 @@ namespace BattleKit.Editor {
 			if(isFoldout) {
 				st = _itemList.FoldoutGroup(title);
 			} else {
-				st = _itemList.ListItem(title, true);
+				st = _itemList.ListItem(title);
 			}
 			switch(st) {
 				case ItemList.SelectionType.Focus:
