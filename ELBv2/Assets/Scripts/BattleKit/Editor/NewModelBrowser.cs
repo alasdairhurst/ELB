@@ -1,74 +1,117 @@
 using BattleKit.Engine;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
 namespace BattleKit.Editor {
 
-	class TypeTreeView<T> : TreeView {
-
-		public TypeTreeView(TreeViewState treeViewState)
-			: base(treeViewState) {
-			Reload();
-		}
-
-		private void BuildListRecursive(Type t, ref ILookup<Type,Type> lookup, ref List<TreeViewItem> list, int depth, ref int id) {
-			foreach (var child in lookup[t]) {
-				list.Add(new TreeViewItem { id = id++, depth = depth, displayName = child.Name });
-				if (lookup[child].Any()) {
-					BuildListRecursive(child, ref lookup, ref list, depth + 1, ref id);
-				}
-			}
-		}
-
-		protected override TreeViewItem BuildRoot() {
-			// BuildRoot is called every time Reload is called to ensure that TreeViewItems 
-			// are created from data. 
-
-			var list = new List<TreeViewItem>();
-			var id = 1;
-
-			var types = typeof(T).Assembly.GetTypes()
-					.Where(type => type.IsSubclassOf(typeof(Model)))
-					.ToLookup(model => model.BaseType, model => model);
-
-			var root = new TreeViewItem { id = 0, depth = -1, displayName = "Root" };
-			BuildListRecursive(typeof(T), ref types, ref list, 0, ref id);
-
-			// Utility method that initializes the TreeViewItem.children and .parent for all items.
-			SetupParentsAndChildrenFromDepths(root, list);
-
-			// Return root of the tree
-			return root;
-		}
-	}
-
-
 	public sealed class NewModelBrowser : EditorWindow {
 		// SerializeField is used to ensure the view state is written to the window 
 		// layout file. This means that the state survives restarting Unity as long as the window
 		// is not closed. If the attribute is omitted then the state is still serialized/deserialized.
-		[SerializeField]
+		//[SerializeField]
 		TreeViewState m_TreeViewState;
+		//[SerializeField]
+		TreeViewState m_ListViewState;
+		//[SerializeField]
+		MultiColumnHeaderState m_ListViewHeaderState;
+		//[SerializeField]
+		float f_ModelTreeViewWidth = 100;
+		float ModelTreeWidth {
+			get { return f_ModelTreeViewWidth; }
+			set {
+				if (value >= f_MinPanelWidth && value <= position.width - f_MinPanelWidth) {
+					f_ModelTreeViewWidth = value;
+				}
+			}
+		}
 
 		//The TreeView is not serializable, so it should be reconstructed from the tree data.
-		TypeTreeView<Model> m_SimpleTreeView;
+		TypeTreeView<Model> m_ModelTreeView;
+		ModelsListView m_ModelsListView;
+		SearchField m_ModelSearchField;
+		SearchField m_ListViewSearchField;
+		Vector2 v_ModelScrollPos;
+		Vector2 v_ListViewScrollPos;
+		float f_MinPanelWidth = 100;
+
+		[UnityEditor.Callbacks.DidReloadScripts]
+		private static void OnScriptsReloaded() {
+			// rebuild all the different states
+			// try to get a hash of object definition and see if it changed and if it's worth regenerating headers
+		}
 
 		void OnEnable() {
 			// Check whether there is already a serialized view state (state 
-			// that survived assembly reloading)
-			if (m_TreeViewState == null)
+			// that survived assembly reloading
+			//if (m_TreeViewState == null) {
 				m_TreeViewState = new TreeViewState();
+			//}
+			//if (m_ListViewState == null) {
+				m_ListViewState = new TreeViewState();
+		//	} 
+			//if (m_ListViewHeaderState == null) {
+				m_ListViewHeaderState = ModelsListView.CreateMultiColumnHeaderState();
+			//}
+			m_ModelSearchField = new SearchField();
+			m_ListViewSearchField = new SearchField();
 
-			m_SimpleTreeView = new TypeTreeView<Model>(m_TreeViewState);
+			m_ModelTreeView = new TypeTreeView<Model>(m_TreeViewState);
+			m_ModelsListView = new ModelsListView(m_ListViewState, m_ListViewHeaderState);
 		}
 
 		void OnGUI() {
-			m_SimpleTreeView.OnGUI(new Rect(0, 0, position.width, position.height));
+			GUILayout.BeginHorizontal();
+			{
+				RenderModelTreeView();
+				ModelTreeWidth += Controls.ResizeControl(position.height, ModelTreeWidth);
+				RenderModelsListView();
+			}
+			GUILayout.EndHorizontal();
 		}
+
+		void RenderModelTreeView() {
+			v_ModelScrollPos = EditorGUILayout.BeginScrollView(v_ModelScrollPos, GUILayout.Width(f_ModelTreeViewWidth), GUILayout.MinWidth(f_MinPanelWidth));
+			RenderModelSearch();
+			RenderModelTree();
+			EditorGUILayout.EndScrollView();
+		}
+
+		void RenderModelSearch() {
+			GUILayout.BeginHorizontal(EditorStyles.toolbar);
+			GUILayout.Space(10);
+			GUILayout.FlexibleSpace();
+			m_ModelTreeView.searchString = m_ModelSearchField.OnToolbarGUI(m_ModelTreeView.searchString);
+			GUILayout.EndHorizontal();
+		}
+
+
+		void RenderModelsListSearch() {
+			GUILayout.BeginHorizontal(EditorStyles.toolbar);
+			GUILayout.Space(10);
+			GUILayout.FlexibleSpace();
+			m_ModelsListView.searchString = m_ListViewSearchField.OnToolbarGUI(m_ModelsListView.searchString);
+			GUILayout.EndHorizontal();
+		}
+
+		void RenderModelTree() {
+			Rect rect = GUILayoutUtility.GetRect(0, 100000, 0, 100000);
+			m_ModelTreeView.OnGUI(rect);
+		}
+
+		void RenderModelsListView() {
+			v_ListViewScrollPos = EditorGUILayout.BeginScrollView(v_ListViewScrollPos, GUILayout.Width(position.width - f_ModelTreeViewWidth), GUILayout.MinWidth(f_MinPanelWidth));
+			RenderModelsListSearch();
+			RenderModelsList();
+			EditorGUILayout.EndScrollView();
+
+		}
+
+		void RenderModelsList() {
+			Rect rect = GUILayoutUtility.GetRect(0, 100000, 0, 100000);
+			m_ModelsListView.OnGUI(rect);
+		}
+
 
 		// Add menu named "My Window" to the Window menu
 		[MenuItem("BattleKit/New Model Browser")]

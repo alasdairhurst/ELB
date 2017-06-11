@@ -9,3 +9,5 @@ windows/
 unity.log
 
 /ELBv2/Assets/Data
+/ELBv2/Assets/Scripts/Example
+/ELBv2/Assets/Scripts/Example.meta
