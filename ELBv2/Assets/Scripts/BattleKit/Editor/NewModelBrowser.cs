@@ -1,4 +1,5 @@
 using BattleKit.Engine;
+using ELB.Models;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
@@ -15,7 +16,7 @@ namespace BattleKit.Editor {
 		TreeViewState m_ListViewState;
 		//[SerializeField]
 		MultiColumnHeaderState m_ListViewHeaderState;
-		//[SerializeField]
+		[SerializeField]
 		float f_ModelTreeViewWidth = 100;
 		float ModelTreeWidth {
 			get { return f_ModelTreeViewWidth; }
@@ -28,6 +29,7 @@ namespace BattleKit.Editor {
 
 		//The TreeView is not serializable, so it should be reconstructed from the tree data.
 		TypeTreeView<Model> m_ModelTreeView;
+		iDataModel m_TypeDataModel;
 		ModelsListView m_ModelsListView;
 		SearchField m_ModelSearchField;
 		SearchField m_ListViewSearchField;
@@ -35,29 +37,45 @@ namespace BattleKit.Editor {
 		Vector2 v_ListViewScrollPos;
 		float f_MinPanelWidth = 100;
 
+		static NewModelBrowser m_Instance;
+
 		[UnityEditor.Callbacks.DidReloadScripts]
 		private static void OnScriptsReloaded() {
 			// rebuild all the different states
 			// try to get a hash of object definition and see if it changed and if it's worth regenerating headers
+			if (m_Instance == null) {
+				return;
+			}
+			m_Instance.m_TypeDataModel = new TypeDataModel<Player>();
+			m_Instance.m_ListViewHeaderState = m_Instance.m_TypeDataModel.CreateMultiColumnHeaderState();
+			m_Instance.m_ModelsListView = new ModelsListView(m_Instance.m_ListViewState, m_Instance.m_ListViewHeaderState, m_Instance.m_TypeDataModel);
 		}
 
+
 		void OnEnable() {
+
+			m_Instance = this;
+
 			// Check whether there is already a serialized view state (state 
 			// that survived assembly reloading
 			//if (m_TreeViewState == null) {
-				m_TreeViewState = new TreeViewState();
+			m_TreeViewState = new TreeViewState();
 			//}
 			//if (m_ListViewState == null) {
 				m_ListViewState = new TreeViewState();
-		//	} 
+			//	} 
+
+			m_TypeDataModel = new TypeDataModel<Board>();
+
 			//if (m_ListViewHeaderState == null) {
-				m_ListViewHeaderState = ModelsListView.CreateMultiColumnHeaderState();
+			m_ListViewHeaderState = m_TypeDataModel.CreateMultiColumnHeaderState();
 			//}
+
 			m_ModelSearchField = new SearchField();
 			m_ListViewSearchField = new SearchField();
 
 			m_ModelTreeView = new TypeTreeView<Model>(m_TreeViewState);
-			m_ModelsListView = new ModelsListView(m_ListViewState, m_ListViewHeaderState);
+			m_ModelsListView = new ModelsListView(m_ListViewState, m_ListViewHeaderState, m_TypeDataModel);
 		}
 
 		void OnGUI() {

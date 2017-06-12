@@ -7,30 +7,42 @@ using UnityEngine;
 
 namespace BattleKit.Editor {
 
+	class ObjectTreeViewItem : TreeViewItem {
+		public ScriptableObject reference;
+	}
+
 	class ModelsListView : TreeView {
 
-		public ModelsListView(TreeViewState treeViewState, MultiColumnHeaderState headerState)
+		private iDataModel m_dataModel;
+
+		public ModelsListView(TreeViewState treeViewState, MultiColumnHeaderState headerState, iDataModel dataModel)
 			: base(treeViewState, new MultiColumnHeader(headerState)) {
 
 			showAlternatingRowBackgrounds = true;
 
+			LoadData(dataModel);
+
 			Reload();
+		} 
+
+		public void LoadData(iDataModel dataModel) {
+			m_dataModel = dataModel;
 		}
+
 
 		protected override TreeViewItem BuildRoot() {
 			// BuildRoot is called every time Reload is called to ensure that TreeViewItems 
 			// are created from data. 
 
-			var list = new List<TreeViewItem>() {
-				new TreeViewItem { id = 1, depth = 0, displayName = "example1" },
-				new TreeViewItem { id = 2, depth = 0, displayName = "example3" },
-				new TreeViewItem { id = 3, depth = 0, displayName = "example2" },
-				new TreeViewItem { id = 4, depth = 0, displayName = "example4" },
-				new TreeViewItem { id = 5, depth = 0, displayName = "example5" },
-				new TreeViewItem { id = 6, depth = 0, displayName = "example3" }
-			};
+			var list = new List<TreeViewItem>();
+			var rows = m_dataModel.GetRows();
+			foreach (ScriptableObject row in rows) {
+				list.Add(
+					new ObjectTreeViewItem { id = row.GetInstanceID(), depth = 0, displayName = row.name, reference = row }
+				);
+			}
 
-			var root = new TreeViewItem { id = 0, depth = -1, displayName = "Root" };
+			var root = new ObjectTreeViewItem { id = 0, depth = -1, displayName = "Root" };
 
 			// Utility method that initializes the TreeViewItem.children and .parent for all items.
 			SetupParentsAndChildrenFromDepths(root, list);
