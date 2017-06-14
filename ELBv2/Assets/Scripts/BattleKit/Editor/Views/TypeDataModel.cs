@@ -9,17 +9,27 @@ using UnityEngine;
 namespace BattleKit.Editor {
 
 	interface iDataModel {
-		IList GetRows();
-		IList<MultiColumnHeaderState.Column> GetColumns();
+		IList<SerializedObject> GetRows();
+		IList<DataModelColumn> GetColumns();
 		MultiColumnHeaderState CreateMultiColumnHeaderState();
+	}
+
+	class DataModelColumn : MultiColumnHeaderState.Column {
+		public string propertyName;
 	}
 
 	class TypeDataModel<T> : iDataModel where T : ScriptableObject {
 		private Type type;
-		private List<T> rows;
-		private List<MultiColumnHeaderState.Column> columns;
+		private List<SerializedObject> rows;
+		private List<DataModelColumn> columns;
 
-		private List<T> Rows {
+		~TypeDataModel() {
+			rows.ForEach(row => {
+				row.Dispose();
+			});
+		}
+
+		private List<SerializedObject> Rows {
 			get {
 				if (rows == null) {
 					buildRows();
@@ -28,7 +38,7 @@ namespace BattleKit.Editor {
 			}
 		}
 
-		private List<MultiColumnHeaderState.Column> Columns {
+		private List<DataModelColumn> Columns {
 			get {
 				if (columns == null) {
 					buildColumns();
@@ -41,32 +51,61 @@ namespace BattleKit.Editor {
 		
 		}
 
-		public IList GetRows() {
+		public IList<SerializedObject> GetRows() {
 			return Rows;
 		}
 
-		public IList<MultiColumnHeaderState.Column> GetColumns() {
+		public IList<DataModelColumn> GetColumns() {
 			return Columns;
 		}
 
 		private void buildRows() {
 			// collect the instances of scriptableobject
 			if (rows == null) {
-				rows = new List<T>();
+				rows = new List<SerializedObject>();
 			} else {
 				rows.Clear();
 			}
-			var res = Resources.LoadAll<T>("").OrderBy(item => item.name).Select(item => item as T).ToList();
+			var res = Resources.LoadAll<T>("").OrderBy(item => item.name).Select(item => new SerializedObject(item)).ToList();
 			rows.AddRange(res);
 		}
 
 		private void buildColumns() {
 			// figure out all the headers
 			if (columns == null) {
-				columns = new List<MultiColumnHeaderState.Column>();
+				columns = new List<DataModelColumn>();
 			} else {
 				columns.Clear();
 			}
+
+			// add dummy column
+			columns.Add(
+				new DataModelColumn {
+					propertyName = "",
+					headerContent = new GUIContent(""),
+					width = 10,
+					maxWidth = 10,
+					minWidth = 10,
+					canSort = false,
+					autoResize = false,
+					allowToggleVisibility = false
+				}
+			);
+
+			columns.Add(
+				new DataModelColumn {
+					propertyName = "name",
+					headerContent = new GUIContent("Asset Name"),
+					contextMenuText = "Asset Name",
+					headerTextAlignment = TextAlignment.Left,
+					sortedAscending = false,
+					sortingArrowAlignment = TextAlignment.Right,
+					width = 90,
+					maxWidth = 150,
+					autoResize = true,
+					allowToggleVisibility = false
+				}
+			);
 
 			var objectForType = ScriptableObject.CreateInstance<T>();
 			var selection = new SerializedObject(objectForType);
@@ -75,14 +114,13 @@ namespace BattleKit.Editor {
 			prop.NextVisible(true);
 			while (prop.NextVisible(false)) {
 				columns.Add(
-					new MultiColumnHeaderState.Column {
+					new DataModelColumn {
 						headerContent = new GUIContent(prop.displayName, prop.tooltip),
 						contextMenuText = prop.displayName,
 						headerTextAlignment = TextAlignment.Left,
 						sortedAscending = true,
 						sortingArrowAlignment = TextAlignment.Right,
 						width = 70,
-						maxWidth = 150,
 						autoResize = true,
 						allowToggleVisibility = true
 					}

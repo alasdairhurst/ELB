@@ -1,9 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using UnityEditor;
+using UnityEngine;
 
 namespace BattleKit.Editor {
 	class Utils {
@@ -21,7 +19,7 @@ namespace BattleKit.Editor {
 			foreach (var element in elements) {
 				if (element.Contains("[")) {
 					var elementName = element.Substring(0, element.IndexOf("["));
-					var index = System.Convert.ToInt32(element.Substring(element.IndexOf("[")).Replace("[", "").Replace("]", ""));
+					var index = Convert.ToInt32(element.Substring(element.IndexOf("[")).Replace("[", "").Replace("]", ""));
 					obj = GetValue_Imp(obj, elementName, index);
 				} else {
 					obj = GetValue_Imp(obj, element);
@@ -34,7 +32,6 @@ namespace BattleKit.Editor {
 			if (source == null)
 				return null;
 			var type = source.GetType();
-
 			while (type != null) {
 				var f = type.GetField(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
 				if (f != null)
@@ -64,8 +61,5 @@ namespace BattleKit.Editor {
 			}
 			return enm.Current;
 		}
-
-
-
 	}
 }

@@ -46,15 +46,23 @@ namespace BattleKit.Editor {
 			if (m_Instance == null) {
 				return;
 			}
-			m_Instance.m_TypeDataModel = new TypeDataModel<Player>();
-			m_Instance.m_ListViewHeaderState = m_Instance.m_TypeDataModel.CreateMultiColumnHeaderState();
-			m_Instance.m_ModelsListView = new ModelsListView(m_Instance.m_ListViewState, m_Instance.m_ListViewHeaderState, m_Instance.m_TypeDataModel);
+			m_Instance.init();
 		}
 
+
+		void init() {
+			m_TypeDataModel = new TypeDataModel<Cell>();
+			m_ListViewHeaderState = m_TypeDataModel.CreateMultiColumnHeaderState();
+			m_ModelTreeView = new TypeTreeView<Model>(m_TreeViewState);
+			m_ModelsListView = new ModelsListView(m_ListViewState, m_ListViewHeaderState, m_TypeDataModel);
+		}
 
 		void OnEnable() {
 
 			m_Instance = this;
+
+			m_ModelSearchField = new SearchField();
+			m_ListViewSearchField = new SearchField();
 
 			// Check whether there is already a serialized view state (state 
 			// that survived assembly reloading
@@ -65,17 +73,11 @@ namespace BattleKit.Editor {
 				m_ListViewState = new TreeViewState();
 			//	} 
 
-			m_TypeDataModel = new TypeDataModel<Board>();
-
 			//if (m_ListViewHeaderState == null) {
-			m_ListViewHeaderState = m_TypeDataModel.CreateMultiColumnHeaderState();
+			//m_ListViewHeaderState = m_TypeDataModel.CreateMultiColumnHeaderState();
 			//}
 
-			m_ModelSearchField = new SearchField();
-			m_ListViewSearchField = new SearchField();
-
-			m_ModelTreeView = new TypeTreeView<Model>(m_TreeViewState);
-			m_ModelsListView = new ModelsListView(m_ListViewState, m_ListViewHeaderState, m_TypeDataModel);
+			init();
 		}
 
 		void OnGUI() {
