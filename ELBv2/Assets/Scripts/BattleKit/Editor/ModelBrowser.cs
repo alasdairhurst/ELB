@@ -281,7 +281,7 @@ namespace BattleKit.Editor {
 			if (instance == null) {
 				return;
 			}
-			Selection.objects = new UnityEngine.Object[] { instance as Model };
+			Selection.activeObject = instance as Model;
 		}
 
 		private void Duplicate(object instance) {

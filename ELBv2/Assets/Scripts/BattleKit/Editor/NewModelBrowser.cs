@@ -3,6 +3,9 @@ using ELB.Models;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
+using System.Collections.Generic;
+using System.Linq;
+using System;
 
 namespace BattleKit.Editor {
 
@@ -10,14 +13,15 @@ namespace BattleKit.Editor {
 		// SerializeField is used to ensure the view state is written to the window 
 		// layout file. This means that the state survives restarting Unity as long as the window
 		// is not closed. If the attribute is omitted then the state is still serialized/deserialized.
-		//[SerializeField]
+		[SerializeField]
 		TreeViewState m_TreeViewState;
-		//[SerializeField]
+		[SerializeField]
 		TreeViewState m_ListViewState;
-		//[SerializeField]
-		MultiColumnHeaderState m_ListViewHeaderState;
+		[SerializeField]
+		SuperModelDataStore m_DataStore;
 		[SerializeField]
 		float f_ModelTreeViewWidth = 100;
+
 		float ModelTreeWidth {
 			get { return f_ModelTreeViewWidth; }
 			set {
@@ -29,7 +33,6 @@ namespace BattleKit.Editor {
 
 		//The TreeView is not serializable, so it should be reconstructed from the tree data.
 		TypeTreeView<Model> m_ModelTreeView;
-		iDataModel m_TypeDataModel;
 		ModelsListView m_ModelsListView;
 		SearchField m_ModelSearchField;
 		SearchField m_ListViewSearchField;
@@ -40,7 +43,7 @@ namespace BattleKit.Editor {
 		static NewModelBrowser m_Instance;
 
 		[UnityEditor.Callbacks.DidReloadScripts]
-		private static void OnScriptsReloaded() {
+		public static void Reload() {
 			// rebuild all the different states
 			// try to get a hash of object definition and see if it changed and if it's worth regenerating headers
 			if (m_Instance == null) {
@@ -50,11 +53,39 @@ namespace BattleKit.Editor {
 		}
 
 
+		public static void RepaintWindow() {
+			if (m_Instance != null) {
+				m_Instance.Repaint();
+			}
+		}
+
 		void init() {
-			m_TypeDataModel = new TypeDataModel<Cell>();
-			m_ListViewHeaderState = m_TypeDataModel.CreateMultiColumnHeaderState();
 			m_ModelTreeView = new TypeTreeView<Model>(m_TreeViewState);
-			m_ModelsListView = new ModelsListView(m_ListViewState, m_ListViewHeaderState, m_TypeDataModel);
+			m_ModelTreeView.OnSelectionChanged += typeSelectionChanged;
+			m_ModelsListView = new ModelsListView(m_ListViewState, m_DataStore, m_ModelTreeView.GetSelectedType());
+			m_ModelsListView.OnSelectionChanged += modelSelectionChanged;
+		}
+
+		void typeSelectionChanged(Type type) {
+			m_ModelsListView.SetListType(type);
+
+			//init();
+		}
+
+		void selectionChanged() {
+			if (Selection.objects.Length > 0) {
+				// Move to the view for the type of the first item
+				var type = Selection.objects.First().GetType();
+				m_ModelTreeView.SetSelection(new List<int> { type.AssemblyQualifiedName.GetHashCode() });
+				m_ModelsListView.SetListType(type);
+			}
+
+			m_ModelsListView.SetSelection(Selection.objects.Select(o => o.GetInstanceID()).ToList());
+			m_Instance.Repaint();
+		}
+
+		void modelSelectionChanged(ScriptableObject[] selection) {
+			Selection.objects = selection;
 		}
 
 		void OnEnable() {
@@ -64,20 +95,27 @@ namespace BattleKit.Editor {
 			m_ModelSearchField = new SearchField();
 			m_ListViewSearchField = new SearchField();
 
-			// Check whether there is already a serialized view state (state 
-			// that survived assembly reloading
-			//if (m_TreeViewState == null) {
-			m_TreeViewState = new TreeViewState();
-			//}
-			//if (m_ListViewState == null) {
-				m_ListViewState = new TreeViewState();
-			//	} 
+			// Check whether there is already a serialized view state (state
+			// that survived assembly reloading)
+			if (m_TreeViewState == null) {
+				m_TreeViewState = new TreeViewState();
+			}
 
-			//if (m_ListViewHeaderState == null) {
-			//m_ListViewHeaderState = m_TypeDataModel.CreateMultiColumnHeaderState();
-			//}
+			if (m_DataStore == null) {
+				m_DataStore = new SuperModelDataStore();
+			}
+
+			if (m_ListViewState == null) {
+				m_ListViewState = new TreeViewState();
+			}
+
+			Selection.selectionChanged += selectionChanged;
 
 			init();
+		}
+
+		private void OnDestroy() {
+			Selection.selectionChanged -= selectionChanged;
 		}
 
 		void OnGUI() {

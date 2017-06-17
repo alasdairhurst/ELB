@@ -1,11 +1,11 @@
 using BattleKit.Engine;
 using UnityEditor;
+using UnityEditor.Callbacks;
 using UnityEngine;
-using System.IO;
-using System;
 
 namespace BattleKit.Editor {
-	[CustomEditor(typeof(Model), true)]
+
+	[CustomEditor(typeof(Model), true), CanEditMultipleObjects]
 	class ModelInspector : UnityEditor.Editor {
 
 		private bool _isRenaming;
@@ -42,10 +42,12 @@ namespace BattleKit.Editor {
 			_currentAssetPath = AssetDatabase.GetAssetPath(target);
 			_name = target.name;
 			(target as Model).InspectorOnChange.AddListener(ModelBrowser.RepaintWindow);
+			(target as Model).InspectorOnChange.AddListener(NewModelBrowser.RepaintWindow);
 		}
 
 		void OnDestroy() {
 			(target as Model).InspectorOnChange.RemoveListener(ModelBrowser.RepaintWindow);
+			(target as Model).InspectorOnChange.RemoveListener(NewModelBrowser.RepaintWindow);
 		}
 
 		private bool ValidateRename(string name) {
@@ -80,14 +82,16 @@ namespace BattleKit.Editor {
 		}
 
 		public override void OnInspectorGUI() {
-			if (!string.IsNullOrEmpty(_currentAssetPath)) {
-				RenderRenameAsset();
-				EditorGUILayout.Separator();
-			} else {
-				var name = EditorGUILayout.TextField("Asset Name", target.name);
-				if (name != target.name) {
-					target.name = name;
-					(target as Model).InspectorOnChange.Invoke();
+			if (targets.Length == 1) {
+				if (!string.IsNullOrEmpty(_currentAssetPath)) {
+					RenderRenameAsset();
+					EditorGUILayout.Separator();
+				} else {
+					var name = EditorGUILayout.TextField("Asset Name", target.name);
+					if (name != target.name) {
+						target.name = name;
+						(target as Model).InspectorOnChange.Invoke();
+					}
 				}
 			}
 			DrawDefaultInspector();
