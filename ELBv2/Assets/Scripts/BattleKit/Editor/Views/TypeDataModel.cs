@@ -67,7 +67,6 @@ namespace BattleKit.Editor {
 			return Rows;
 		}
 
-
 		public IList<MultiColumnHeaderState.Column> GetColumns() {
 			return Columns;
 		}
@@ -83,7 +82,11 @@ namespace BattleKit.Editor {
 			} else {
 				rows.Clear();
 			}
-			var res = Resources.LoadAll("", instance.GetType()).OrderBy(item => item.name).Select(item => new SerializedObject(item)).ToList();
+			var res = Resources.LoadAll("", instance.GetType())
+				.Where(item => item.GetType() == instance.GetType()) // don't get subclassese
+				.OrderBy(item => item.name)
+				.Select(item => new SerializedObject(item))
+				.ToList();
 			rows.AddRange(res);
 		}
 

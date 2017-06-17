@@ -37,8 +37,10 @@ namespace BattleKit.Editor {
 			}
 		}
 
-
 		void OnEnable() {
+			if (target == null) {
+				return;
+			}
 			_currentAssetPath = AssetDatabase.GetAssetPath(target);
 			_name = target.name;
 			(target as Model).InspectorOnChange.AddListener(ModelBrowser.RepaintWindow);
@@ -46,6 +48,9 @@ namespace BattleKit.Editor {
 		}
 
 		void OnDestroy() {
+			if (target == null) {
+				return;
+			}
 			(target as Model).InspectorOnChange.RemoveListener(ModelBrowser.RepaintWindow);
 			(target as Model).InspectorOnChange.RemoveListener(NewModelBrowser.RepaintWindow);
 		}
