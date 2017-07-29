@@ -36,6 +36,21 @@ namespace BattleKit.Editor {
 			}
 		}
 
+		public void SetSelection(Type type) {
+			var id = type.AssemblyQualifiedName.GetHashCode();
+			SetSelection(new List<int> { type.AssemblyQualifiedName.GetHashCode() });
+			EnsureExpanded(id);
+		}
+
+		private void EnsureExpanded(int id) {
+			if (IsExpanded(id)) {
+				return;
+			}
+			var parent = GetRows().First(r => r.id == id).parent;
+			EnsureExpanded(parent.id);
+			SetExpanded(new List<int> { id });
+		}
+
 		private Type GetSelectedType(IList<int> selectedIds) {
 			return (GetRows().First(x => x.id == selectedIds[0]) as TypeTreeViewItem).type;
 		}

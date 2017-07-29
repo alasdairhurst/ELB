@@ -17,18 +17,20 @@ namespace BattleKit.Editor {
 
 		public delegate void selectionDelegate(ScriptableObject[] selection);
 		public selectionDelegate OnSelectionChanged;
+		public selectionDelegate OnContextClickedItem;
+		public Action OnContextClicked;
 
 		private TypeDataModel m_dataModel;
 		private SuperModelDataStore m_dataStore;
 
 		public ModelsListView(TreeViewState treeViewState, SuperModelDataStore dataStore, Type initialType)
 			: base(treeViewState) {
-
 			m_dataStore = dataStore;
 			extraSpaceBeforeIconAndLabel = 350;
 			showAlternatingRowBackgrounds = true;
 
 			SetListType(initialType);
+			SetSelection(treeViewState.selectedIDs);
 		} 
 
 		public void SetListType(Type type) {
@@ -41,10 +43,28 @@ namespace BattleKit.Editor {
 			Reload();
 		}
 
+		private ScriptableObject[] GetSelectedObjects(IList<int> selectedIds) {
+			return selectedIds.Select(id => m_dataModel.GetRowByID(id).targetObject as ScriptableObject).ToArray();
+		}
+
 		protected override void SelectionChanged(IList<int> selectedIds) {
 			base.SelectionChanged(selectedIds);
 			if (OnSelectionChanged != null) {
-				OnSelectionChanged(selectedIds.Select(id => m_dataModel.GetRowByID(id).targetObject as ScriptableObject).ToArray());
+				OnSelectionChanged(GetSelectedObjects(selectedIds));
+			}
+		}
+
+		protected override void ContextClicked() {
+			base.ContextClicked();
+			if (OnContextClicked != null) {
+				OnContextClicked();
+			}
+		}
+
+		protected override void ContextClickedItem(int id) {
+			base.ContextClickedItem(id);
+			if (OnContextClickedItem != null) {
+				OnContextClickedItem(GetSelectedObjects(GetSelection()));
 			}
 		}
 
@@ -87,7 +107,6 @@ namespace BattleKit.Editor {
 		void CellGUI(Rect cellRect, TreeViewItem item, object val, int column, ref RowGUIArgs args) {
 			// Center cell rect vertically (makes it easier to place controls, icons etc in the cells)
 			CenterRectUsingSingleLineHeight(ref cellRect);
-			var col = multiColumnHeader.GetColumn(column) as MultiColumnHeaderState.Column;
 			var str = getStringRepresentationOf(val);
 			DefaultGUI.Label(cellRect, str, args.selected, args.focused);
 		}
