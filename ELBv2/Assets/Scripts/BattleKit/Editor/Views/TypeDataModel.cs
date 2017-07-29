@@ -60,6 +60,9 @@ namespace BattleKit.Editor {
 		}
 
 		public Type GetDataType() {
+			if (!instance) {
+				return null;
+			}
 			return instance.GetType();
 		}
 

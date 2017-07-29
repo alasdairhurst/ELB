@@ -84,8 +84,11 @@ namespace BattleKit.Editor {
 			if (Selection.objects.Length > 0) {
 				// Move to the view for the type of the first item
 				var type = Selection.objects.First().GetType();
-				m_ModelTreeView.SetSelection(new List<int> { type.AssemblyQualifiedName.GetHashCode() });
-				m_ModelsListView.SetListType(type);
+				if (type.IsAssignableFrom(typeof(ScriptableObject))) {
+					m_ModelTreeView.SetSelection(new List<int> { type.AssemblyQualifiedName.GetHashCode() });
+					m_ModelsListView.SetListType(type);
+				}
+			
 			}
 
 			m_ModelsListView.SetSelection(Selection.objects.Select(o => o.GetInstanceID()).ToList());
