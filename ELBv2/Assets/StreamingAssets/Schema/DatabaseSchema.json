@@ -1,0 +1,43 @@
+{
+	"type": "object",
+	"properties": {
+		"metadata": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string"
+				},
+				"lastModified": {
+					"type":"string"
+				},
+				"author": {
+					"type": "string"
+				},
+				"version": {
+					"type":"string"
+				},
+				"dependencies": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				},
+				"readOnly": {
+					"type": "boolean"
+				}
+			},
+			"additionalProperties": false
+		}
+	},
+	"ids": {
+		"type": "object",
+		"patternProperties":{
+			".*": {
+				"type": "string"
+			}
+		}
+	},
+	"data": {
+		"type": "object"
+	}
+}

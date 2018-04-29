@@ -1,0 +1,34 @@
+// data.bkp
+{
+	"metadata": {
+		"name": "data",
+		"lastModified": "",
+		"author": "",
+		"version": "0.1",
+		"dependencies": [
+			"game.bkp",
+			"mod.bkp"
+		],
+	},
+	"ids": {
+		"1232": "blah"
+	},
+	"data": { // diff here
+		"TYPE1": {
+			"1232": {
+				"thing3": "data"
+			},
+			"1235": {
+				"thing1": "data"
+			}
+		},
+		"TYPE2": {
+			"1234": {
+				"thing2": "data"
+			}
+		}
+	}
+}
+
+
+

@@ -2,27 +2,18 @@ using System;
 using UnityEngine;
 using System.Linq;
 using UnityEngine.Events;
+using Newtonsoft.Json.Linq;
 
 namespace BattleKit.Engine {
 
 	public static class ModelHelpers {
-		public static T Clone<T>(this T model) where T : Model {
-			var clone = ScriptableObject.Instantiate(model);
-			if (!string.IsNullOrEmpty(model.name)) {
-				clone.name = model.name + "(Clone)";
-			}
-			return clone;
-		}
+
 	}
 
 	[Serializable]
-	public abstract class Model : ScriptableObject {
+	public abstract class Model : ScriptableObject, iSerializable {
 
-		public static T Find<T>(string name) where T : Model {
-			return (from resource in Resources.FindObjectsOfTypeAll<T>()
-			where resource.name == name
-			select resource).FirstOrDefault();
-		}
+		public string id;
 
 		public override string ToString( ) {
 			return ToString(false);
@@ -33,7 +24,21 @@ namespace BattleKit.Engine {
 			if(name != "") {
 				s += string.Format("\"{0}\": ", name);
 			}
-			return s += JsonUtility.ToJson(this, pretty);
+			return s += Serialize().ToString();
+		}
+
+		public Model() {
+			id = Guid.NewGuid().ToString().ToUpper();
+		}
+
+		public virtual void Init(JToken data) {
+			id = data.Value<string>("id");
+		}
+
+		public virtual JToken Serialize() {
+			return new JObject(
+				new JProperty("id", id)
+			);
 		}
 
 		[HideInInspector]
